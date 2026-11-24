@@ -85,7 +85,7 @@ public static class CadGeometry
 
     /// <summary>
     /// Cuts out the part of <paramref name="target"/> around <paramref name="pick"/> up to the nearest crossings with
-    /// <paramref name="cutters"/> on either side, as AutoCAD's quick trim. Returns what is left of it (empty: an
+    /// <paramref name="cutters"/> on either side. Returns what is left of it (empty: an
     /// entity that nothing crosses is deleted), or null when it can't be trimmed there (a closed shape crossed once).
     /// A trimmed circle comes back as an open polyline arc.
     /// </summary>
@@ -139,7 +139,7 @@ public static class CadGeometry
 
     /// <summary>
     /// Lengthens the end of an open CAD line nearest <paramref name="pick"/>, straight on, to the first of
-    /// <paramref name="boundaries"/> it meets, or to the edge of <paramref name="page"/> if it meets none (AutoCAD's extend).
+    /// <paramref name="boundaries"/> it meets, or to the edge of <paramref name="page"/> if it meets none.
     /// Returns the line's new points; null for a closed shape or circle, or a line already pointing off the page.
     /// </summary>
     public static List<PdfPoint>? Extend(CadMarkup target, IEnumerable<CadMarkup> boundaries, PdfPoint pick, PdfRect page)
@@ -337,7 +337,7 @@ public static class CadGeometry
     }
 
     /// <summary>
-    /// Chains open CAD lines end to end into one polyline, as AutoCAD's JOIN. Where two meet, both are cut or stretched
+    /// Chains open CAD lines end to end into one polyline. Where two meet, both are cut or stretched
     /// to where they cross, so trimmed ends that overshoot or fall short make a clean corner. The result is closed when
     /// its last end comes back to its first, within <paramref name="tolerance"/> or the widest gap it bridged.
     /// It keeps the first line's colour and weight. Null for fewer than two lines.

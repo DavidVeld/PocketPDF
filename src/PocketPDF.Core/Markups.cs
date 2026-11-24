@@ -116,7 +116,7 @@ public enum MeasureKind { Distance, Length, Area }
 
 /// <summary>
 /// A measurement: a distance (two points), a length along several points, or an area. It keeps the scale it was
-/// measured at, so changing the page's scale later doesn't change measurements already made (as in Bluebeam).
+/// measured at, so changing the page's scale later doesn't change measurements already made.
 /// </summary>
 public sealed class MeasureMarkup : Markup
 {

@@ -61,7 +61,7 @@ public class MeasureTests
     }
 
     [Fact]
-    public void A_bluebeam_style_scale_in_feet_is_understood()
+    public void A_scale_in_feet_from_another_viewer_is_understood()
     {
         // 1/8" = 1'-0": one inch of paper (72 pt) is 8 feet, so one point is 8/72 ft.
         using var source = TestPdf.CreateWithText();

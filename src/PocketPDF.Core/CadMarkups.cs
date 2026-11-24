@@ -42,7 +42,7 @@ public sealed class CadCircleMarkup : CadMarkup, IFillable
 }
 
 /// <summary>
-/// An aligned dimension between two points, drawn as in AutoCAD: extension lines, a dimension line with oblique ticks
+/// An aligned dimension between two points, drawn the usual drafting way: extension lines, a dimension line with oblique ticks
 /// and the length above it. It keeps the scale it was made at, as a measurement does. Typing a new length changes the
 /// shapes its ends sit on (see <see cref="Dimensioning.Resize"/>).
 /// </summary>
@@ -83,7 +83,7 @@ public sealed class CadDimensionMarkup : CadMarkup
     }
 }
 
-/// <summary>How a hatch fills its region: parallel lines (as AutoCAD's ANSI31), lines both ways, or solid colour.</summary>
+/// <summary>How a hatch fills its region: parallel 45° lines, lines both ways, or solid colour.</summary>
 public enum HatchPattern { Lines, Crosshatch, Solid }
 
 /// <summary>A region bounded by <see cref="Boundary"/>, filled in its <see cref="Pattern"/>.</summary>

@@ -793,7 +793,7 @@ public partial class MainWindow : Window
         if (CadInputFirst != null) CadInputFirst.Text = ""; // the next move shows it the new way
     }
 
-    /// <summary>As in Revit or AutoCAD: a number typed while a CAD tool is on goes straight into the size box.</summary>
+    /// <summary>A number typed while a CAD tool is on goes straight into the size box.</summary>
     void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
     {
         if (CadInputBar.Visibility != Visibility.Visible || Keyboard.FocusedElement is TextBox) return;

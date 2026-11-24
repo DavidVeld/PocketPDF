@@ -9,7 +9,7 @@ public sealed record DimensionShape(List<(ViewPoint A, ViewPoint B)> Lines, View
 /// </summary>
 public static class Dimensioning
 {
-    // On paper, in points, about as AutoCAD's defaults: gap before an extension line, overshoot past the dimension line, half a tick.
+    // On paper, in points, following common drafting practice: gap before an extension line, overshoot past the dimension line, half a tick.
     const double ExtensionGap = 2, Overshoot = 3.5, TickHalf = 3.5, TextGap = 2;
     /// <summary>How close a point must be to a shape to count as on it, in points: snapped points sit exactly on it.</summary>
     const double OnTolerance = 0.05;

@@ -9,6 +9,11 @@ into the PDF as standard annotations that other viewers show too.
 *A made-up sample sheet with one of each kind of markup. The style of new markups is set along the top, the tools
 are down the right, and pages, snap, zoom and the drawing scale are in the status bar.*
 
+PocketPDF is an original, independent design: its tools, interface and code were written from scratch for this
+project. It is not affiliated with, endorsed by, or based on any other PDF or CAD product. Product names such as
+Bluebeam, Adobe Acrobat, AutoCAD and Revit appear only to say which files PocketPDF can open and save for, and are
+trademarks of their owners.
+
 ## Features
 
 - **Markups**: text, callouts, tags, clouds, pen, highlight, lines, rectangles and masks, in a choice of colour,
@@ -73,7 +78,7 @@ Press a tool's key to pick it.
 | Rectangle | Two corners, or a typed width and length. |
 | Circle | The centre, then a point on it, or a typed diameter or radius. |
 | Offset | Copies a CAD line or circle, or a line of the drawing itself (a dashed gridline whole), to one side at the typed distance. |
-| Trim | Cuts away the piece of a CAD line up to the lines crossing it, or drag a window from empty space to trim every line its edge crosses. Hold Shift to extend instead: the clicked end (or each line the window crosses) runs on to the next line, or to the page edge. Trim and offset show AutoCAD's pickbox cursor. |
+| Trim | Cuts away the piece of a CAD line up to the lines crossing it, or drag a window from empty space to trim every line its edge crosses. Hold Shift to extend instead: the clicked end (or each line the window crosses) runs on to the next line, or to the page edge. Trim and offset show a small square pick cursor. |
 | Hatch | Fills a region closed off by CAD lines, as hatch, crosshatch or solid, in the fill colour. |
 | Dimension | Two points, then where the dimension line goes: drawn as in CAD, with ticks and the length above. Double-click it (Select tool) and type a new length: a shape both ends sit on stretches (a circle grows), a shape only the far end sits on moves, and dimensions on them follow. Changing the scale asks whether to update dimensions to it; No keeps their values, and new dimensions use the new scale. |
 | Join | Joins the selected CAD lines into one polyline with clean corners. |

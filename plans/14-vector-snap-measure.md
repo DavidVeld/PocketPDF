@@ -14,7 +14,7 @@ The PDFium bundled with Docnet exports every function needed (checked: `FPDFPage
    - **Distance:** click two snapped points.
    - **Polylength:** a chain of points, double-click to end.
    - **Area:** a polygon; shows area and perimeter.
-   - Results show live in the status bar. Placing one creates a markup saved as a standard annotation: `/Line` with `/IT /LineDimension` (distance), `/PolyLine` with `/IT /PolyLineDimension`, and `/Polygon` with `/IT /PolygonDimension`, each with `/Measure` and an `/AP`. These are the same types Bluebeam uses, so the measurements stay measurements there.
+   - Results show live in the status bar. Placing one creates a markup saved as a standard annotation: `/Line` with `/IT /LineDimension` (distance), `/PolyLine` with `/IT /PolyLineDimension`, and `/Polygon` with `/IT /PolygonDimension`, each with `/Measure` and an `/AP`. These are standard PDF types, so other viewers that support them keep them as measurements.
 6. **Snap in the other tools:** cloud vertices and callout arrow tips use the same snap, so markups land exactly on the drawing.
 
 **Risks:**

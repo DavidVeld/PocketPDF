@@ -1142,10 +1142,10 @@ public sealed class MarkupCanvas : Canvas
         : _firstPoint;
 
     /// <summary>
-    /// Where a point lands: Shift (or Ctrl with the CAD tools, like AutoCAD's F8) locks it horizontal or vertical from
+    /// Where a point lands: Shift (or Ctrl with the CAD tools) locks it horizontal or vertical from
     /// <paramref name="from"/>; otherwise Ctrl flips <see cref="SnapEnabled"/>, and it snaps to the drawing's line work
     /// within reach, and to the markups' edges, corners and circles. A CAD line that snaps to nothing and runs within
-    /// a few degrees of horizontal or vertical is pulled straight, as AutoCAD's polar tracking.
+    /// a few degrees of horizontal or vertical is pulled straight.
     /// </summary>
     ViewPoint Snapped(ViewPoint point, ViewPoint? from)
     {
@@ -1483,7 +1483,7 @@ public sealed class MarkupCanvas : Canvas
             : $"{(extend ? "Extended" : "Trimmed")} {changed} line{(changed == 1 ? "" : "s")}");
     }
 
-    /// <summary>AutoCAD's pickbox: a small open square, for the tools that pick lines (trim, offset).</summary>
+    /// <summary>The pick cursor: a small open square, for the tools that pick lines (trim, offset).</summary>
     static readonly Cursor PickboxCursor = CreatePickboxCursor();
 
     static Cursor CreatePickboxCursor()
@@ -1611,7 +1611,7 @@ public sealed class MarkupCanvas : Canvas
     {
         if (_cadPoints.Count > 0 && Tool is MarkupTool.CadLine or MarkupTool.CadPolyline)
         {
-            FinishCadLine(); // right-click ends the line, as in AutoCAD
+            FinishCadLine(); // right-click ends the line
             e.Handled = true;
             return;
         }
