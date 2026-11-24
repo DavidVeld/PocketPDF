@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Docnet.Core" Version="2.6.0" />
+    <!-- Keep PDFsharp at 6.2.x: 6.5 and later are AGPL and refuse to run without a licence. -->
+    <PackageReference Include="PDFsharp" Version="6.2.4" />
+    <!-- Overrides the vulnerable 8.0.1 that PDFsharp pulls in. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
+  </ItemGroup>
+
+</Project>
