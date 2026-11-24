@@ -9,11 +9,6 @@ into the PDF as standard annotations that other viewers show too.
 *A made-up sample sheet with one of each kind of markup. The style of new markups is set along the top, the tools
 are down the right, and pages, snap, zoom and the drawing scale are in the status bar.*
 
-PocketPDF is an original, independent design: its tools, interface and code were written from scratch for this
-project. It is not affiliated with, endorsed by, or based on any other PDF or CAD product. Product names such as
-Bluebeam, Adobe Acrobat, AutoCAD and Revit appear only to say which files PocketPDF can open and save for, and are
-trademarks of their owners.
-
 ## Features
 
 - **Markups**: text, callouts, tags, clouds, pen, highlight, lines, rectangles and masks, in a choice of colour,
@@ -41,7 +36,7 @@ trademarks of their owners.
 - **New sheet**: a blank page in A4 to A0 or a custom size, portrait or landscape.
 - **Combine PDFs**: select PDFs in Explorer, right-click, *Combine PDFs* (add it to the Explorer menu from the
   Help menu).
-- **Saved as standard PDF annotations**: other viewers (Bluebeam, Acrobat) show the markups too.
+- **Saved as standard PDF annotations**: other PDF viewers show the markups too.
 - **Show me the tricks**: press F1 for a quick guided tour of the window.
 
 ## Tools
