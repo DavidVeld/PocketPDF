@@ -790,6 +790,14 @@ public sealed class MarkupCanvas : Canvas
             return;
         }
 
+        if (SelectedSheet is { } editing) // editing a placed sheet: a drag anywhere on it moves it; Accept (or Esc) ends the edit
+        {
+            var area = editing.Visible(_page!);
+            if (clicked == editing || clickPosition.X >= area.Left && clickPosition.X <= area.Right && clickPosition.Y >= area.Top && clickPosition.Y <= area.Bottom)
+                StartDrag(clickPosition, grip: null);
+            return;
+        }
+
         var markup = clicked as Markup;
         if (ctrl && markup is CloudMarkup { Shape: AreaShape.Polygon } cloud && markup == SelectedMarkup)
         {
@@ -1709,8 +1717,14 @@ public sealed class MarkupCanvas : Canvas
             if (Children[i] != _textEditor) Children.RemoveAt(i);
         _overlayStart = Children.Count;
         if (_page == null) return;
-        foreach (var markup in VisibleMarkups.OrderBy(markup => markup is PlacedSheetMarkup ? 0 : markup is CadHatchMarkup ? 1 : 2)) // placed sheets and hatches underneath: markups on them stay clickable
+        var editing = SelectedSheet;
+        foreach (var markup in VisibleMarkups.Where(markup => markup != editing).OrderBy(markup => markup is PlacedSheetMarkup ? 0 : markup is CadHatchMarkup ? 1 : 2)) // placed sheets and hatches underneath: markups on them stay clickable
             AddShapes(markup);
+        if (editing != null) // the sheet being edited on top, the rest washed out under it
+        {
+            Children.Insert(_overlayStart++, new Rectangle { Width = _page.ViewWidth, Height = _page.ViewHeight, Fill = SheetEditWash, IsHitTestVisible = false });
+            AddShapes(editing);
+        }
         foreach (var measure in _measures) AddShapes(measure);
         DrawOverlay();
     }
@@ -1761,6 +1775,7 @@ public sealed class MarkupCanvas : Canvas
     }
 
     static readonly Brush TextSelectionBrush = CreateFrozenBrush(Color.FromArgb(90, 0x1E, 0x88, 0xE5));
+    static readonly Brush SheetEditWash = CreateFrozenBrush(Color.FromArgb(150, 255, 255, 255));
 
     static Brush CreateFrozenBrush(Color color)
     {
@@ -1888,7 +1903,8 @@ public sealed class MarkupCanvas : Canvas
                     var placed = sheet.Placed(_page!);
                     var image = new Image
                     {
-                        Source = bitmap, Width = placed.Width, Height = placed.Height, Stretch = Stretch.Fill, Opacity = sheet.Opacity, IsHitTestVisible = false,
+                        Source = bitmap, Width = placed.Width, Height = placed.Height, Stretch = Stretch.Fill, Opacity = sheet.Opacity,
+                        IsHitTestVisible = sheet == SelectedSheet, Cursor = Cursors.SizeAll, // only the sheet being edited takes clicks on its inside
                         Clip = new RectangleGeometry(new Rect(visible.Left - placed.Left, visible.Top - placed.Top, visible.Width, visible.Height)),
                     };
                     SetLeft(image, placed.Left);

@@ -1885,7 +1885,7 @@ public partial class MainWindow : Window
         MarkupLayer.FinishTextEditing();
         if (MarkupLayer.Tool != MarkupTool.Select) SelectTool.IsChecked = true; // OnToolChecked switches the tool
         MarkupLayer.PlaceSheet(sheet);
-        NoticeStatus.Text = $"Placed {name}. Set its opacity, colour, clip and alignment in the bar above; drag its edge to move it, a corner to resize it";
+        NoticeStatus.Text = $"Placed {name}. Set its opacity, colour, clip and alignment in the bar above; drag it to move it, a corner to resize it. Accept when done";
     }
 
     static byte[] ToPng(BitmapSource image)
@@ -1967,6 +1967,8 @@ public partial class MainWindow : Window
     void OnSheetClip(object sender, RoutedEventArgs e) => MarkupLayer.StartSheetClip(text => NoticeStatus.Text = text);
 
     void OnSheetShowAll(object sender, RoutedEventArgs e) => MarkupLayer.ShowWholeSheet();
+
+    void OnSheetAccept(object sender, RoutedEventArgs e) => MarkupLayer.Select([]);
 
     async void OnSheetAlign(object sender, RoutedEventArgs e)
     {

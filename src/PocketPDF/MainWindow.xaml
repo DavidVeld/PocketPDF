@@ -426,8 +426,11 @@
                 <Button x:Name="SheetShowAll" Click="OnSheetShowAll" Margin="0,0,6,0" ToolTip="Undo the clip: show the whole sheet again">
                     <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Icon}" Text="&#xE740;" /><TextBlock Style="{StaticResource Label}" Text="Show all" /></StackPanel>
                 </Button>
-                <Button Click="OnSheetAlign" ToolTip="Line it up: click two points on the sheet (grid crossings), then the same two on the drawing. It moves and scales to match">
+                <Button Click="OnSheetAlign" Margin="0,0,6,0" ToolTip="Line it up: click two points on the sheet (grid crossings), then the same two on the drawing. It moves and scales to match">
                     <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Icon}" Text="&#xE7C5;" /><TextBlock Style="{StaticResource Label}" Text="Align…" /></StackPanel>
+                </Button>
+                <Button Click="OnSheetAccept" Style="{DynamicResource AccentButtonStyle}" ToolTip="Done editing the sheet: back to the drawing and its markups. Click the sheet's edge to edit it again">
+                    <StackPanel Orientation="Horizontal"><TextBlock Style="{StaticResource Icon}" Text="&#xE8FB;" /><TextBlock Style="{StaticResource Label}" Text="Accept" /></StackPanel>
                 </Button>
             </StackPanel>
         </Border>
