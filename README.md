@@ -176,6 +176,7 @@ the boxes in the status bar, and Enter applies it.
 
 - **Wheel**: zoom, keeping the point under the cursor in place.
 - **Middle button drag**: pan.
+- **Middle button double-click**: fit the page in the window.
 - **Select tool**: click to select, drag a window over empty space to select what it touches, Shift+click to
   add or remove, drag to move, double-click to edit text. Shift while dragging keeps the move straight across or
   up, Ctrl+drag drags a copy, Ctrl+Shift+drag a copy straight across or up. Ctrl+click a selected cloud's edge

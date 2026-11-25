@@ -553,7 +553,7 @@
             <Separator />
             <StatusBarItem>
                 <StackPanel Orientation="Horizontal">
-                    <Button Style="{StaticResource PageButton}" Click="OnFit" ToolTip="Fit the page in the window (Ctrl+0)" Margin="0,0,4,0">
+                    <Button Style="{StaticResource PageButton}" Click="OnFit" ToolTip="Fit the page in the window (Ctrl+0, or double-click the mouse wheel)" Margin="0,0,4,0">
                         <TextBlock Style="{StaticResource PageIcon}" Text="&#xE9A6;" />
                     </Button>
                     <TextBox x:Name="ZoomBox" Width="56" Padding="4,1" MinHeight="0" HorizontalContentAlignment="Right"

@@ -2388,6 +2388,12 @@ public partial class MainWindow : Window
             return;
         }
         if (e.ChangedButton != MouseButton.Middle) return;
+        if (e.ClickCount == 2)
+        {
+            FitPage(); // double-click the wheel to see the whole page
+            e.Handled = true;
+            return;
+        }
         _panPreviousPosition = e.GetPosition(Scroller);
         Scroller.CaptureMouse();
         e.Handled = true;
