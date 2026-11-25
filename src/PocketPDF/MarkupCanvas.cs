@@ -1214,7 +1214,7 @@ public sealed class MarkupCanvas : Canvas
             ? new SnapIndex(VisibleMarkups.SelectMany(markup => Dimensioning.SnapSegments(markup, _page)),
                 VisibleMarkups.Select(markup => Dimensioning.SnapCenter(markup, _page)).OfType<ViewPoint>()).Snap(point, SnapRadius, from, SnapKinds)
             : null;
-        _snapMarker = onMarkups is { } m && (onDrawing is not { } d || m.Kind <= d.Kind) ? onMarkups : onDrawing;
+        _snapMarker = onMarkups is { } m && (onDrawing is not { } d || SnapIndex.Beats(m, d, point)) ? onMarkups : onDrawing;
         return _snapMarker?.Point ?? point;
     }
 

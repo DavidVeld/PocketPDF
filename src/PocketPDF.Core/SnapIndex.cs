@@ -54,7 +54,10 @@ public sealed class SnapIndex
         bool On(SnapKind kind) => kinds?.Contains(kind) ?? true;
         var near = NearbySegments(point, radius).ToList();
 
-        if (On(SnapKind.Endpoint) && Closest(near.SelectMany(i => new[] { _segments[i].A, _segments[i].B }), point, radius) is { } end) return new(end, SnapKind.Endpoint);
+        // End points, intersections and centres are all exact points: the closest wins, so a circle's own quadrant points or a
+        // drawing's line end a few pixels off never pull the click away from the centre under the cursor.
+        var exact = new List<SnapPoint>();
+        if (On(SnapKind.Endpoint) && Closest(near.SelectMany(i => new[] { _segments[i].A, _segments[i].B }), point, radius) is { } end) exact.Add(new(end, SnapKind.Endpoint));
 
         if (On(SnapKind.Intersection))
         {
@@ -65,10 +68,11 @@ public sealed class SnapIndex
             for (int i = 0; i < candidates.Count; i++)
                 for (int j = i + 1; j < candidates.Count; j++)
                     if (Intersection(_segments[candidates[i]], _segments[candidates[j]]) is { } crossing) crossings.Add(crossing);
-            if (Closest(crossings, point, radius) is { } intersection) return new(intersection, SnapKind.Intersection);
+            if (Closest(crossings, point, radius) is { } intersection) exact.Add(new(intersection, SnapKind.Intersection));
         }
 
-        if (On(SnapKind.Center) && Closest(_centers, point, radius) is { } center) return new(center, SnapKind.Center);
+        if (On(SnapKind.Center) && Closest(_centers, point, radius) is { } center) exact.Add(new(center, SnapKind.Center));
+        if (exact.Count > 0) return exact.MinBy(snap => CloudGeometry.Distance(snap.Point, point)); // a tie goes to the earlier kind
 
         var middles = near.Select(i => new ViewPoint((_segments[i].A.X + _segments[i].B.X) / 2, (_segments[i].A.Y + _segments[i].B.Y) / 2));
         if (On(SnapKind.Midpoint) && Closest(middles, point, radius) is { } middle) return new(middle, SnapKind.Midpoint);
@@ -80,6 +84,17 @@ public sealed class SnapIndex
         if (!On(SnapKind.Nearest) || near.Count == 0) return null;
         var nearest = near.Select(i => DistanceToSegment(point, _segments[i])).MinBy(found => found.Distance);
         return new(nearest.Point, SnapKind.Nearest);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="snap"/> beats <paramref name="other"/> (from another index) for the cursor at <paramref name="point"/>:
+    /// the better kind, end points, intersections and centres counting as one, then the closer; a tie keeps <paramref name="snap"/>.
+    /// </summary>
+    public static bool Beats(SnapPoint snap, SnapPoint other, ViewPoint point)
+    {
+        static int Rank(SnapKind kind) => kind <= SnapKind.Center ? 0 : (int)kind;
+        return Rank(snap.Kind) != Rank(other.Kind) ? Rank(snap.Kind) < Rank(other.Kind)
+            : CloudGeometry.Distance(snap.Point, point) <= CloudGeometry.Distance(other.Point, point);
     }
 
     /// <summary>Where a line from <paramref name="from"/> meets the segment square on, if that falls on the segment.</summary>

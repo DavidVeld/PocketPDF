@@ -49,6 +49,18 @@ public class SnapAndScaleTests
     }
 
     [Fact]
+    public void A_centre_under_the_cursor_beats_a_line_end_further_off()
+    {
+        // A small circle zoomed out: its quadrant point (an end point) is in reach, but the centre is closer.
+        var index = new SnapIndex([(new ViewPoint(406, 400), new ViewPoint(406, 400))], [new ViewPoint(400, 400)]);
+        Assert.Equal(new SnapPoint(new(400, 400), SnapKind.Center), index.Snap(new(401, 400), radius: 8));
+        Assert.Equal(new SnapPoint(new(406, 400), SnapKind.Endpoint), index.Snap(new(405, 400), radius: 8));
+        // Between indexes too: a drawing's line end further off loses to a markup's centre.
+        Assert.True(SnapIndex.Beats(new(new(400, 400), SnapKind.Center), new(new(406, 400), SnapKind.Endpoint), new(401, 400)));
+        Assert.True(SnapIndex.Beats(new(new(400, 400), SnapKind.Midpoint), new(new(406, 400), SnapKind.Nearest), new(405, 400))); // kind first, then distance
+    }
+
+    [Fact]
     public void Snaps_switched_off_are_skipped()
     {
         var noEnds = Enum.GetValues<SnapKind>().Where(kind => kind != SnapKind.Endpoint).ToHashSet();
