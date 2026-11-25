@@ -1109,6 +1109,9 @@ public sealed class MarkupCanvas : Canvas
         || (Tool == MarkupTool.CadDimension && _cadPoints.Count < 2) // the third click places the dimension line freely
         || _picks != null;
 
+    /// <summary>Whether the tool needs the drawing's line work: to snap to, or (offset) to pick a line of the drawing to copy.</summary>
+    public bool NeedsLineWork => UsesSnapping || Tool == MarkupTool.CadOffset;
+
     /// <summary>Whether points snap to the drawing. Holding Ctrl turns snapping off while it is held.</summary>
     public bool SnapEnabled { get; set; } = true;
 
@@ -1413,8 +1416,8 @@ public sealed class MarkupCanvas : Canvas
     CadMarkup? CadEdgeAt(ViewPoint position)
     {
         var point = _page!.ToPdf(position);
-        return CadEdges.Select(edge => (Edge: edge, Distance: CadGeometry.DistanceTo(edge, point)))
-            .Where(candidate => candidate.Distance <= SnapRadius).MinBy(candidate => candidate.Distance).Edge;
+        // MinBy over markups (not tuples): null when none is near, where a tuple would throw.
+        return CadEdges.Where(edge => CadGeometry.DistanceTo(edge, point) <= SnapRadius).MinBy(edge => CadGeometry.DistanceTo(edge, point));
     }
 
     /// <summary>The drawing's own line under the cursor (a dashed gridline whole), as a CAD line in the current colour and weight, not yet added.</summary>

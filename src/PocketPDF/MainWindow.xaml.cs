@@ -766,10 +766,10 @@ public partial class MainWindow : Window
             NoticeStatus.Text = "No scale ref found on the sheet: measuring at 1:1. Set the scale in the status bar, or calibrate";
     }
 
-    /// <summary>Reads the page's line work for snapping. Only while a tool that snaps is on: big CAD sheets take a moment.</summary>
+    /// <summary>Reads the page's line work, for snapping and offset. Only while a tool that needs it is on: big CAD sheets take a moment.</summary>
     async void LoadLineWork()
     {
-        if (!MarkupLayer.UsesSnapping || _doc?.Pdf is not { } pdf || _doc.Loaded is not { } loaded || CurrentPageIndex < 0 || MarkupLayer.Snaps != null) return;
+        if (!MarkupLayer.NeedsLineWork || _doc?.Pdf is not { } pdf || _doc.Loaded is not { } loaded || CurrentPageIndex < 0 || MarkupLayer.Snaps != null) return;
         int pageIndex = CurrentPageIndex;
         var page = loaded.Pages[pageIndex];
         SnapIndex snaps;
@@ -788,7 +788,7 @@ public partial class MainWindow : Window
         {
             Mouse.OverrideCursor = null;
         }
-        if (pageIndex != CurrentPageIndex || !ReferenceEquals(loaded, _doc?.Loaded) || !MarkupLayer.UsesSnapping) return; // the user moved on meanwhile
+        if (pageIndex != CurrentPageIndex || !ReferenceEquals(loaded, _doc?.Loaded) || !MarkupLayer.NeedsLineWork) return; // the user moved on meanwhile
         MarkupLayer.Snaps = snaps;
         if (snaps.Count == 0) NoticeStatus.Text = "No line work to snap to on this page (a scan?)";
         else if (snaps.Count >= VectorExtractor.MaxSegments) NoticeStatus.Text = "Very dense page: snapping covers only part of it";
