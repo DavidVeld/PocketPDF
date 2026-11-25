@@ -1810,7 +1810,13 @@ public sealed class MarkupCanvas : Canvas
             Fill = Brushes.White,
             Stroke = Brushes.DodgerBlue,
             StrokeThickness = 1.5 / _screenUnitsPerPoint,
-            Cursor = Cursors.SizeAll,
+            // Resize grips show a resize arrow: a sheet's corners (top left, bottom right) and a circle's radius grip on its right.
+            Cursor = grip switch
+            {
+                { Markup: PlacedSheetMarkup } => Cursors.SizeNWSE,
+                { Markup: CadCircleMarkup, Index: 1 } => Cursors.SizeWE,
+                _ => Cursors.SizeAll,
+            },
             Tag = grip,
             ToolTip = grip.Markup is CloudMarkup { Shape: AreaShape.Polygon } ? "Drag to move this corner. Ctrl+click removes it" : null,
         };
