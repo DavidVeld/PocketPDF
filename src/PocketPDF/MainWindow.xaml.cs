@@ -1210,6 +1210,18 @@ public partial class MainWindow : Window
             e.Handled = true;
             return;
         }
+        if (Keyboard.Modifiers == ModifierKeys.Control && e.Key is Key.OemPlus or Key.Add or Key.OemMinus or Key.Subtract)
+        {
+            if (RotateClockwiseButton.IsEnabled) RotatePage(e.Key is Key.OemPlus or Key.Add ? 90 : -90);
+            e.Handled = true;
+            return;
+        }
+        if (Keyboard.Modifiers == ModifierKeys.Shift && e.Key == Key.T && SelectTextTool.IsEnabled)
+        {
+            SelectTextTool.IsChecked = true;
+            e.Handled = true;
+            return;
+        }
         if (Keyboard.Modifiers == ModifierKeys.None && ToolButtonForKey(e.Key) is { IsEnabled: true } toolButton)
         {
             toolButton.IsChecked = true; // OnToolChecked switches the tool
