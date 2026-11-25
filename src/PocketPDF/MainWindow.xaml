@@ -250,6 +250,9 @@
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE838;" /></MenuItem.Icon>
                 </MenuItem>
                 <Separator />
+                <MenuItem Header="Check for _updates" Click="OnCheckForUpdate" ToolTip="Compare this version with the latest release on GitHub">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE895;" /></MenuItem.Icon>
+                </MenuItem>
                 <MenuItem Header="_About PocketPDF" Click="OnAbout">
                     <MenuItem.Icon><Image Source="app.ico" Width="16" Height="16" /></MenuItem.Icon>
                 </MenuItem>

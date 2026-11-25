@@ -71,6 +71,7 @@ public partial class MainWindow : Window
         Loaded += (_, _) =>
         {
             foreach (var filePath in filesToOpen) OpenFile(filePath);
+            _ = CheckForUpdate(quiet: true);
         };
     }
 
@@ -114,6 +115,35 @@ public partial class MainWindow : Window
             },
         };
         dialog.ShowDialog();
+    }
+
+    void OnCheckForUpdate(object sender, RoutedEventArgs e) => _ = CheckForUpdate(quiet: false);
+
+    /// <summary>Asks GitHub for the latest release (tagged v0.x.y) and offers its page when it is newer than this build.
+    /// Quiet (at startup): says nothing when up to date, offline or no release is published.</summary>
+    async Task CheckForUpdate(bool quiet)
+    {
+        string? tag, page;
+        try
+        {
+            using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd("PocketPDF"); // GitHub refuses requests without one
+            using var json = System.Text.Json.JsonDocument.Parse(await http.GetStringAsync("https://api.github.com/repos/DavidVeld/PocketPDF/releases/latest"));
+            tag = json.RootElement.GetProperty("tag_name").GetString();
+            page = json.RootElement.GetProperty("html_url").GetString();
+        }
+        catch (Exception ex)
+        {
+            if (!quiet) MessageBox.Show(this, $"Couldn't check for updates.\n\n{ex.Message}", "PocketPDF");
+            return;
+        }
+        if (page != null && Version.TryParse(tag?.TrimStart('v', 'V'), out var latest) && Version.TryParse(AppVersion, out var current) && latest > current)
+        {
+            if (MessageBox.Show(this, $"PocketPDF {latest} is out (you have {AppVersion}).\n\nOpen the download page?", "PocketPDF",
+                    MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.Yes)
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(page) { UseShellExecute = true });
+        }
+        else if (!quiet) MessageBox.Show(this, $"PocketPDF {AppVersion} is the latest version.", "PocketPDF");
     }
 
     // ---- Open and save ------------------------------------------------------------------------

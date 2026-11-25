@@ -97,7 +97,7 @@ The bar along the top sets how new markups look. With markups selected, it chang
 | View | Line weights (off draws every line of the drawing one pixel wide), Show CAD layer, Dark mode |
 | Tools | Every drawing tool, Calibrate, Check text overlaps, Place PDF or image, Rotate page, Compare with old revision |
 | CAD tools | The CAD tools and Join |
-| Help | Show me the tricks, add or remove *Combine PDFs* in the Explorer menu, About |
+| Help | Show me the tricks, add or remove *Combine PDFs* in the Explorer menu, Check for updates, About |
 
 The status bar has the page list switch, Snap, rotate page, page buttons, fit and zoom, the cursor position in
 real millimetres, and the drawing scale (click it to pick or calibrate one).
@@ -130,6 +130,10 @@ PDFs are drawn with [Docnet](https://github.com/GowenGit/docnet) (PDFium) and ed
 The version is `0.x.y`, made at build time from the number of git commits since the versioning started: every
 commit is a new version, 0.0.1 up to 0.0.999, then 0.1.0. Nothing needs bumping by hand. It shows in the title
 bar and under Help ▸ About. A build without git (from a downloaded zip) shows the .NET default, 1.0.0.
+
+At startup PocketPDF asks GitHub for the latest release and, when it is newer, offers to open its download page
+(Help ▸ Check for updates does the same on demand). Tag releases with the version they were built from, as
+`v0.x.y`; with no release published, the startup check stays quiet.
 
 ## Keyboard and mouse
 
