@@ -212,13 +212,16 @@ public static class MarkupFile
         if (PageGeometry.FromPage(page).Rotation != geometry.Rotation) page.Elements["/Rotate"] = new PdfInteger(geometry.Rotation);
     }
 
-    /// <summary>The scale of the page's first viewport that has one, or null.</summary>
+    /// <summary>
+    /// The scale the page's viewports have, or null if they have none, or different ones (a 1:100 plan beside a 1:20
+    /// detail): one page-wide scale would then measure one of them wrong, so the user sets the scale instead.
+    /// </summary>
     static double? ViewportScale(PdfPage page)
     {
         if (page.Elements.GetObject("/VP") is not PdfArray viewports) return null;
-        foreach (var item in viewports.Elements)
-            if (Resolve(item) is PdfDictionary viewport && MeasureDictionary.MmPerPoint(viewport.Elements["/Measure"]) is { } scale) return scale;
-        return null;
+        var scales = viewports.Elements.Select(item => Resolve(item) is PdfDictionary viewport ? MeasureDictionary.MmPerPoint(viewport.Elements["/Measure"]) : null)
+            .OfType<double>().ToList();
+        return scales.Count > 0 && scales.All(scale => Math.Abs(scale - scales[0]) <= scales[0] * 1e-6) ? scales[0] : null;
     }
 
     /// <summary>Reads the editable annotations on a page into markups. Each markup remembers which annotation it came from.</summary>

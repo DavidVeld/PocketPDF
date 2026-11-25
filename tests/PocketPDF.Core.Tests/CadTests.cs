@@ -137,6 +137,29 @@ public class CadTests
         Assert.Equal(mm, DrawingScale.ParseLengthMm(typed)!.Value, 9);
 
     [Theory]
+    [InlineData("en-GB", "2,400", 2400)] // as FormatLength shows it
+    [InlineData("en-GB", "1,250.5", 1250.5)]
+    [InlineData("en-GB", "1,5", 1.5)]
+    [InlineData("en-GB", "0,6m", 600)]
+    [InlineData("de-DE", "2.400", 2400)]
+    [InlineData("de-DE", "2,4", 2.4)]
+    [InlineData("de-DE", "2,400", 2.4)]
+    public void Thousands_read_the_way_lengths_are_shown(string culture, string typed, double mm)
+    {
+        var before = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo(culture);
+        try
+        {
+            Assert.Equal(mm, DrawingScale.ParseLengthMm(typed)!.Value, 9);
+            if (mm == Math.Round(mm)) Assert.Equal(mm, DrawingScale.ParseLengthMm(DrawingScale.FormatLength(mm))!.Value, 9); // what is shown reads back
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = before;
+        }
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("abc")]
     [InlineData("0")]

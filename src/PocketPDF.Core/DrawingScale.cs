@@ -33,7 +33,8 @@ public static class DrawingScale
     public static string FormatLength(double mm) => $"{mm.ToString("#,0", CultureInfo.CurrentCulture)} mm";
 
     /// <summary>
-    /// A typed length in mm: "600", "60 cm" or "0,6m" (mm when no unit; a comma counts as the decimal point).
+    /// A typed length in mm: "600", "60 cm", "0,6m" or "2,400" (mm when no unit). Thousands grouped as
+    /// <see cref="FormatLength"/> shows them count as thousands; any other comma counts as the decimal point.
     /// Null if it isn't a positive length.
     /// </summary>
     public static double? ParseLengthMm(string text)
@@ -42,7 +43,11 @@ public static class DrawingScale
         int unitStart = text.Length;
         while (unitStart > 0 && (char.IsLetter(text[unitStart - 1]) || text[unitStart - 1] is '"' or '\'')) unitStart--;
         string unit = unitStart < text.Length ? text[unitStart..] : "mm";
-        return double.TryParse(text[..unitStart].Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out double value)
+        string number = text[..unitStart].Trim();
+        var format = CultureInfo.CurrentCulture.NumberFormat;
+        string group = Regex.Escape(format.NumberGroupSeparator), point = Regex.Escape(format.NumberDecimalSeparator);
+        if (Regex.IsMatch(number, $@"^\d{{1,3}}({group}\d{{3}})+({point}\d+)?$")) number = number.Replace(format.NumberGroupSeparator, "");
+        return double.TryParse(number.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out double value)
             && value > 0 && MmPerUnit(unit) is { } mmPerUnit ? value * mmPerUnit : null;
     }
 

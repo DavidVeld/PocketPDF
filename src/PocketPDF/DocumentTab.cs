@@ -21,6 +21,9 @@ public sealed class DocumentTab(LoadedPdf loaded, PdfRenderer pdf, string filePa
     /// <summary>True for a document not saved anywhere yet (a new sheet, an accepted comparison): it counts as unsaved work.</summary>
     public bool IsOnlyInMemory { get; set; } = isOnlyInMemory;
 
+    /// <summary>The file's last write time when it was read or last saved here, so Save can tell if someone else changed it since.</summary>
+    public DateTime? FileTime { get; set; }
+
     /// <summary>A page scale set since opening or saving: not a markup, so not in the undo history.</summary>
     public bool ScaleChanged { get; set; }
 

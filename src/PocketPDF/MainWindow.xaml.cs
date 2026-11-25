@@ -129,8 +129,10 @@ public partial class MainWindow : Window
         }
         LoadedPdf loaded;
         PdfRenderer renderer;
+        DateTime fileTime;
         try
         {
+            fileTime = File.GetLastWriteTimeUtc(filePath); // before reading: a change while reading then counts as a change
             loaded = MarkupFile.Load(filePath);
             renderer = new PdfRenderer(loaded.OriginalBytes);
         }
@@ -140,7 +142,7 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-        AddDocument(new DocumentTab(loaded, renderer, filePath, isOnlyInMemory: false));
+        AddDocument(new DocumentTab(loaded, renderer, filePath, isOnlyInMemory: false) { FileTime = fileTime });
         _settings.AddRecentFile(fullPath);
         ShowRecentFiles();
     }
@@ -481,6 +483,12 @@ public partial class MainWindow : Window
     {
         if (_doc == null) return false;
         MarkupLayer.FinishTextEditing();
+        // Saving rebuilds the file from the copy read at opening, so anything another viewer saved into it since would be lost.
+        if (_doc.FileTime is { } readTime && string.Equals(Path.GetFullPath(filePath), Path.GetFullPath(_doc.FilePath), StringComparison.OrdinalIgnoreCase)
+            && File.Exists(filePath) && File.GetLastWriteTimeUtc(filePath) != readTime
+            && MessageBox.Show(this, $"{Path.GetFileName(filePath)} was changed by someone else since you opened it. Saving over it loses their changes.\n\n"
+                + "Save over it anyway? Choose No to keep their changes, then use Save As to save yours under another name.", "PocketPDF",
+                MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
         // Written beside it first, then swapped in: a failed save never leaves a half-written file in place of the drawing.
         string tempPath = filePath + ".saving";
         try
@@ -496,6 +504,7 @@ public partial class MainWindow : Window
             return false;
         }
         _doc.FilePath = filePath;
+        _doc.FileTime = File.GetLastWriteTimeUtc(filePath);
         _doc.History.MarkSaved();
         _doc.IsOnlyInMemory = false;
         _doc.ScaleChanged = false;

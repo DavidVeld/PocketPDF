@@ -65,18 +65,38 @@ public class MeasureTests
     {
         // 1/8" = 1'-0": one inch of paper (72 pt) is 8 feet, so one point is 8/72 ft.
         using var source = TestPdf.CreateWithText();
-        using (var document = PdfSharp.Pdf.IO.PdfReader.Open(source.FilePath, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Modify))
-        {
-            var format = new PdfSharp.Pdf.PdfDictionary(document) { Elements = { ["/U"] = new PdfSharp.Pdf.PdfString("ft"), ["/C"] = new PdfSharp.Pdf.PdfReal(8.0 / 72) } };
-            var measure = new PdfSharp.Pdf.PdfDictionary(document) { Elements = { ["/Type"] = new PdfSharp.Pdf.PdfName("/Measure"), ["/Subtype"] = new PdfSharp.Pdf.PdfName("/RL"), ["/X"] = new PdfSharp.Pdf.PdfArray(document, format) } };
-            var viewport = new PdfSharp.Pdf.PdfDictionary(document) { Elements = { ["/Type"] = new PdfSharp.Pdf.PdfName("/Viewport"), ["/Measure"] = measure } };
-            document.Pages[0].Elements["/VP"] = new PdfSharp.Pdf.PdfArray(document, viewport);
-            document.Save(source.FilePath);
-        }
+        AddViewports(source.FilePath, ("ft", 8.0 / 72));
 
         double mmPerPoint = MarkupFile.Load(source.FilePath).MmPerPointByPage[0];
 
         Assert.Equal(8 * 304.8 / 72, mmPerPoint, 4); // PDF numbers keep about 6 decimals
         Assert.Equal("1:96", DrawingScale.Describe(mmPerPoint));
+    }
+
+    [Fact]
+    public void A_sheet_whose_viewports_have_different_scales_gets_no_page_scale()
+    {
+        // A 1:100 plan and a 1:20 detail on one sheet: no one scale measures both right.
+        using var mixed = TestPdf.CreateWithText();
+        AddViewports(mixed.FilePath, ("mm", DrawingScale.FromRatio(100)), ("mm", DrawingScale.FromRatio(20)));
+        Assert.Empty(MarkupFile.Load(mixed.FilePath).MmPerPointByPage);
+
+        using var same = TestPdf.CreateWithText();
+        AddViewports(same.FilePath, ("mm", DrawingScale.FromRatio(50)), ("mm", DrawingScale.FromRatio(50)));
+        Assert.Equal("1:50", DrawingScale.Describe(MarkupFile.Load(same.FilePath).MmPerPointByPage[0]));
+    }
+
+    /// <summary>Gives the first page viewports with these scales, as another viewer writes them: units per point.</summary>
+    static void AddViewports(string filePath, params (string Unit, double PerPoint)[] scales)
+    {
+        using var document = PdfSharp.Pdf.IO.PdfReader.Open(filePath, PdfSharp.Pdf.IO.PdfDocumentOpenMode.Modify);
+        var viewports = scales.Select(scale =>
+        {
+            var format = new PdfSharp.Pdf.PdfDictionary(document) { Elements = { ["/U"] = new PdfSharp.Pdf.PdfString(scale.Unit), ["/C"] = new PdfSharp.Pdf.PdfReal(scale.PerPoint) } };
+            var measure = new PdfSharp.Pdf.PdfDictionary(document) { Elements = { ["/Type"] = new PdfSharp.Pdf.PdfName("/Measure"), ["/Subtype"] = new PdfSharp.Pdf.PdfName("/RL"), ["/X"] = new PdfSharp.Pdf.PdfArray(document, format) } };
+            return (PdfSharp.Pdf.PdfItem)new PdfSharp.Pdf.PdfDictionary(document) { Elements = { ["/Type"] = new PdfSharp.Pdf.PdfName("/Viewport"), ["/Measure"] = measure } };
+        }).ToArray();
+        document.Pages[0].Elements["/VP"] = new PdfSharp.Pdf.PdfArray(document, viewports);
+        document.Save(filePath);
     }
 }
