@@ -260,6 +260,12 @@
         </Menu>
         <!-- Groups: Edit | Style. The select and drawing tools are in the bar down the right; the page list and fit are in the status bar. -->
         <ToolBar x:Name="MainToolBar" DockPanel.Dock="Top" ToolBarTray.IsLocked="True" Padding="4,2">
+            <ToolBar.Resources>
+                <!-- Room either side of each separator, so the line, text and area groups read apart. -->
+                <Style x:Key="{x:Static ToolBar.SeparatorStyleKey}" TargetType="Separator" BasedOn="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}">
+                    <Setter Property="Margin" Value="12,2" />
+                </Style>
+            </ToolBar.Resources>
             <Button x:Name="UndoButton" Click="OnUndo" IsEnabled="False" ToolTip="Undo (Ctrl+Z)">
                 <TextBlock Style="{StaticResource ToolIcon}" Text="&#xE7A7;" />
             </Button>
