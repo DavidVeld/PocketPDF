@@ -31,7 +31,10 @@ public sealed class MarkupCanvas : Canvas
     /// </summary>
     sealed record Grip(Markup Markup, int Index);
 
-    static readonly Effect SelectionGlow = new DropShadowEffect { Color = Colors.DodgerBlue, ShadowDepth = 0, BlurRadius = 10, Opacity = 1 };
+    /// <summary>Blur of the glow round selected markups, in screen units: it shows about 5 pixels either side at any zoom.</summary>
+    const double SelectionGlowScreenSize = 12;
+    /// <summary>One shared glow, so a zoom change resizes it on every selected shape at once.</summary>
+    readonly DropShadowEffect _selectionGlow = new() { Color = Colors.DodgerBlue, ShadowDepth = 0, BlurRadius = SelectionGlowScreenSize, Opacity = 1 };
     static readonly FontFamily LabelFont = new(TextLayout.ScreenFontFamily);
 
     PageGeometry? _page;
@@ -204,6 +207,7 @@ public sealed class MarkupCanvas : Canvas
         set
         {
             _screenUnitsPerPoint = value;
+            _selectionGlow.BlurRadius = SelectionGlowScreenSize / value; // the blur is in canvas units, so it would grow with the zoom
             RedrawOverlay(); // grips, snap symbols and sizes keep their size on screen
         }
     }
@@ -1766,7 +1770,7 @@ public sealed class MarkupCanvas : Canvas
         foreach (var element in CreateShapes(markup))
         {
             element.Tag = markup; // lets the Select tool find the markup that was clicked
-            if ((_selection.Contains(markup) || markup == _offsetSource) && element is not Image) element.Effect = SelectionGlow; // a glow on a whole sheet's image is slow
+            if ((_selection.Contains(markup) || markup == _offsetSource) && element is not Image) element.Effect = _selectionGlow; // a glow on a whole sheet's image is slow
             Children.Insert(_overlayStart++, element);
         }
     }
@@ -1807,9 +1811,7 @@ public sealed class MarkupCanvas : Canvas
         {
             Width = size,
             Height = size,
-            Fill = Brushes.White,
-            Stroke = Brushes.DodgerBlue,
-            StrokeThickness = 1.5 / _screenUnitsPerPoint,
+            Fill = Brushes.DodgerBlue,
             // Resize grips show a resize arrow: a sheet's corners (top left, bottom right) and a circle's radius grip on its right.
             Cursor = grip switch
             {
@@ -2140,7 +2142,7 @@ public sealed class MarkupCanvas : Canvas
         if (_offsetSource is { } picked && !_markups.Contains(picked)) // a line of the PDF: glow it, as a picked CAD line glows
             foreach (var shape in CreateShapes(picked))
             {
-                shape.Effect = SelectionGlow;
+                shape.Effect = _selectionGlow;
                 Children.Add(shape);
             }
         if (_offsetSource is { } source && CadGeometry.Offset(source, OffsetDistanceMm / MmPerPoint, _page!.ToPdf(_mousePosition)) is { } offsetPreview)
