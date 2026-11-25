@@ -278,7 +278,7 @@
                 <ComboBoxItem x:Name="CustomColorItem" Content="Custom…" />
             </ComboBox>
             <ComboBox x:Name="LineEndPicker" Width="118" SelectedIndex="0" SelectionChanged="OnLineEndChanged" Margin="4,0,0,0"
-                      ToolTip="Line end: how lines, callout leaders and tags end. Changes the selected one too">
+                      ToolTip="Line end: how lines, callout leaders, tags and dimensions end. Changes the selected one too">
                 <ComboBoxItem Tag="Arrow">
                     <StackPanel Orientation="Horizontal">
                         <Grid Width="20" Height="14" Margin="0,0,6,0"><Path Style="{StaticResource IconLine}" Data="M2.5,7.5 H13" /><Path Style="{StaticResource IconFill}" Data="M18.5,7.5 L12.5,4.5 L12.5,10.5 Z" /></Grid>
@@ -295,6 +295,12 @@
                     <StackPanel Orientation="Horizontal">
                         <Grid Width="20" Height="14" Margin="0,0,6,0"><Path Style="{StaticResource IconLine}" Data="M2.5,7.5 H17.5" /></Grid>
                         <TextBlock Text="None" VerticalAlignment="Center" />
+                    </StackPanel>
+                </ComboBoxItem>
+                <ComboBoxItem Tag="Tick">
+                    <StackPanel Orientation="Horizontal">
+                        <Grid Width="20" Height="14" Margin="0,0,6,0"><Path Style="{StaticResource IconLine}" Data="M2.5,7.5 H16 M13,10.5 L19,4.5" /></Grid>
+                        <TextBlock Text="Tick" VerticalAlignment="Center" />
                     </StackPanel>
                 </ComboBoxItem>
             </ComboBox>

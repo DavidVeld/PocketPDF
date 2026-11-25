@@ -282,11 +282,18 @@ static class AnnotationWriter
                 var shape = Dimensioning.Shape(dimension, page);
                 appearance.Stroke(dimension.Color, dimension.LineWidth);
                 foreach (var (from, to) in shape.Lines) appearance.Line(from, to);
+                ViewPoint[] ends =
+                [
+                    shape.EndA, shape.EndB,
+                    .. appearance.Leader(shape.Middle, shape.EndA, dimension.Ending, dimension.Color, dimension.LineWidth),
+                    .. appearance.Leader(shape.Middle, shape.EndB, dimension.Ending, dimension.Color, dimension.LineWidth),
+                ];
                 appearance.Text(shape.TextTopLeft, dimension.ValueText, CadDimensionMarkup.TextSize, dimension.Color, dimension.Font, shape.TextAngle);
 
-                drawnArea = ViewRect.Around([.. shape.Lines.SelectMany(line => new[] { line.A, line.B }), .. shape.TextCorners]).Inflate(dimension.LineWidth);
+                drawnArea = ViewRect.Around([.. shape.Lines.SelectMany(line => new[] { line.A, line.B }), .. ends, .. shape.TextCorners]).Inflate(dimension.LineWidth);
                 annotation.Elements["/Subtype"] = new PdfName("/Line");
                 annotation.Elements["/L"] = Numbers(document, [dimension.Start, dimension.End]);
+                annotation.Elements["/LE"] = new PdfArray(document, new PdfName(EndingName(dimension.Ending)), new PdfName(EndingName(dimension.Ending)));
                 annotation.Elements["/Contents"] = new PdfString(dimension.ValueText, PdfStringEncoding.Unicode);
                 annotation.Elements["/C"] = ColorArray(document, dimension.Color);
                 annotation.Elements[CadKey] = new PdfDictionary(document)
@@ -448,7 +455,7 @@ static class AnnotationWriter
     /// <summary>The standard /LE name, so other viewers draw the same ending when they redraw the line.</summary>
     internal static string EndingName(LineEnding ending) => ending switch
     {
-        LineEnding.Arrow => "/ClosedArrow", LineEnding.Dot => "/Circle", _ => "/None",
+        LineEnding.Arrow => "/ClosedArrow", LineEnding.Dot => "/Circle", LineEnding.Tick => "/Slash", _ => "/None",
     };
 
     /// <summary>

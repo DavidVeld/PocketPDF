@@ -56,6 +56,10 @@ sealed class AppearanceBuilder
                 double radius = LabelGeometry.DotRadius(lineWidth);
                 Fill(color).FilledCircle(to, radius);
                 return new ViewRect(to.X - radius, to.Y - radius, to.X + radius, to.Y + radius).Corners();
+            case LineEnding.Tick:
+                var (a, b) = LabelGeometry.Tick(from, to, lineWidth);
+                Line(a, b);
+                return [a, b];
             default:
                 return [];
         }

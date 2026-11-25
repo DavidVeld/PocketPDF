@@ -187,13 +187,14 @@ public class CadTests
             new CadHatchMarkup { Boundary = [new(70, 10), new(90, 10), new(90, 50)], Pattern = HatchPattern.Crosshatch, Color = "#1E88E5" },
             new CadHatchMarkup { Boundary = [new(100, 10), new(120, 10), new(120, 50)], Pattern = HatchPattern.Solid, Color = "#43A047" },
             new CadDimensionMarkup { Start = new(10, 100), End = new(60, 130), Offset = -15, MmPerPoint = 20, Font = "Courier New" },
+            new CadDimensionMarkup { Start = new(100, 100), End = new(160, 100), Offset = 10, MmPerPoint = 5, Ending = LineEnding.Arrow },
         ];
         MarkupFile.Save(MarkupFile.Load(source.FilePath), new Dictionary<int, List<Markup>> { [1] = markups }, saved.FilePath);
 
         var reloaded = MarkupFile.Load(saved.FilePath);
         static string Values(Markup markup) => System.Text.Json.JsonSerializer.Serialize(markup, markup.GetType());
         Assert.Equal(markups.Select(Values), reloaded.MarkupsByPage[1].Select(Values));
-        Assert.Equal(6, MarkupFile.AnnotationsToHide(reloaded).Count); // the markup layer draws them, so the layer can be switched off
+        Assert.Equal(7, MarkupFile.AnnotationsToHide(reloaded).Count); // the markup layer draws them, so the layer can be switched off
 
         using var document = PdfReader.Open(saved.FilePath, PdfDocumentOpenMode.Import);
         var layers = document.Internals.Catalog.Elements.GetDictionary("/OCProperties")!.Elements.GetArray("/OCGs")!;

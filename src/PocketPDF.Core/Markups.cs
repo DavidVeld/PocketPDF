@@ -68,8 +68,8 @@ public sealed class TextMarkup : Markup
     public override void Map(Func<PdfPoint, PdfPoint> map) => TextPosition = map(TextPosition);
 }
 
-/// <summary>How a leader or line ends: a filled arrow head, a filled dot, or plainly.</summary>
-public enum LineEnding { Arrow, Dot, None }
+/// <summary>How a leader or line ends: a filled arrow head, a filled dot, plainly, or an oblique drafting tick.</summary>
+public enum LineEnding { Arrow, Dot, None, Tick }
 
 /// <summary>A label with a leader line, ending in an arrow, a dot or nothing. A callout has a box round the text; a tag has none.</summary>
 public sealed class CalloutMarkup : Markup

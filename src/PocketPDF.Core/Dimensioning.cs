@@ -1,7 +1,11 @@
 namespace PocketPDF.Core;
 
-/// <summary>Where a CAD dimension's lines and value go, in view space. The angle is in degrees, clockwise, kept readable.</summary>
-public sealed record DimensionShape(List<(ViewPoint A, ViewPoint B)> Lines, ViewPoint TextTopLeft, double TextAngle, ViewPoint[] TextCorners);
+/// <summary>
+/// Where a CAD dimension's lines and value go, in view space. The dimension line itself is drawn as two leaders from
+/// <see cref="Middle"/> to <see cref="EndA"/> and <see cref="EndB"/>, so its ends follow the line-end setting.
+/// The angle is in degrees, clockwise, kept readable.
+/// </summary>
+public sealed record DimensionShape(List<(ViewPoint A, ViewPoint B)> Lines, ViewPoint Middle, ViewPoint EndA, ViewPoint EndB, ViewPoint TextTopLeft, double TextAngle, ViewPoint[] TextCorners);
 
 /// <summary>
 /// What the measuring and CAD tools snap to on the markups, how a CAD dimension is drawn (the screen and the saved
@@ -10,7 +14,7 @@ public sealed record DimensionShape(List<(ViewPoint A, ViewPoint B)> Lines, View
 public static class Dimensioning
 {
     // On paper, in points, following common drafting practice: gap before an extension line, overshoot past the dimension line, half a tick.
-    const double ExtensionGap = 2, Overshoot = 3.5, TickHalf = 3.5, TextGap = 2;
+    const double ExtensionGap = 2, Overshoot = 3.5, TextGap = 2;
     /// <summary>How close a point must be to a shape to count as on it, in points: snapped points sit exactly on it.</summary>
     const double OnTolerance = 0.05;
 
@@ -98,7 +102,7 @@ public static class Dimensioning
     static PdfPoint ScaledAbout(PdfPoint center, PdfPoint point, double factor) =>
         new(center.X + (point.X - center.X) * factor, center.Y + (point.Y - center.Y) * factor);
 
-    /// <summary>The dimension's extension lines, dimension line and ticks, and where its value goes, upright or reading up.</summary>
+    /// <summary>The dimension's extension lines, its dimension line's ends, and where its value goes, upright or reading up.</summary>
     public static DimensionShape Shape(CadDimensionMarkup dimension, PageGeometry page)
     {
         var (start, end) = (dimension.Start, dimension.End);
@@ -115,10 +119,12 @@ public static class Dimensioning
             var (ex, ey) = Unit(from, to);
             lines.Add((new(from.X + ex * ExtensionGap, from.Y + ey * ExtensionGap), new(to.X + ex * Overshoot, to.Y + ey * Overshoot)));
         }
-        lines.Add((new(lineA.X - dx * Overshoot, lineA.Y - dy * Overshoot), new(lineB.X + dx * Overshoot, lineB.Y + dy * Overshoot)));
-        double tx = (dx + dy) / Math.Sqrt(2), ty = (dy - dx) / Math.Sqrt(2); // 45° up from the line: "/" on a level one
-        foreach (var tick in new[] { lineA, lineB })
-            lines.Add((new(tick.X - tx * TickHalf, tick.Y - ty * TickHalf), new(tick.X + tx * TickHalf, tick.Y + ty * TickHalf)));
+        if (dimension.Ending == LineEnding.Tick) // drafting practice: the dimension line runs on a little past its ticks
+        {
+            lines.Add((lineA, new(lineA.X - dx * Overshoot, lineA.Y - dy * Overshoot)));
+            lines.Add((lineB, new(lineB.X + dx * Overshoot, lineB.Y + dy * Overshoot)));
+        }
+        var middle = new ViewPoint((lineA.X + lineB.X) / 2, (lineA.Y + lineB.Y) / 2);
 
         double angle = Math.Atan2(dy, dx) * 180 / Math.PI;
         if (angle >= 90) angle -= 180; // upright or reading up, as CAD text does: a vertical dimension reads from the bottom
@@ -133,7 +139,7 @@ public static class Dimensioning
             topLeft, new(topLeft.X + cos * width, topLeft.Y + sin * width),
             new(topLeft.X + cos * width - upX * height, topLeft.Y + sin * width - upY * height), new(topLeft.X - upX * height, topLeft.Y - upY * height),
         ];
-        return new(lines, topLeft, angle, corners);
+        return new(lines, middle, lineA, lineB, topLeft, angle, corners);
     }
 
     static (double X, double Y) Unit(ViewPoint from, ViewPoint to)

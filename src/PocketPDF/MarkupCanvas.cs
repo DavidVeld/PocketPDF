@@ -319,6 +319,7 @@ public sealed class MarkupCanvas : Canvas
             CalloutMarkup callout => callout.Ending != ending && Do(() => callout.Ending = ending),
             LineMarkup line => line.Ending != ending && Do(() => line.Ending = ending),
             CloudMarkup { TextPosition: not null } cloud => cloud.Ending != ending && Do(() => cloud.Ending = ending),
+            CadDimensionMarkup dimension => dimension.Ending != ending && Do(() => dimension.Ending = ending),
             _ => false,
         });
     }
@@ -1942,6 +1943,8 @@ public sealed class MarkupCanvas : Canvas
                     }
                 strokes.Freeze();
                 yield return new Path { Data = strokes, Stroke = brush, StrokeThickness = dimension.LineWidth };
+                foreach (var end in new[] { dimensionShape.EndA, dimensionShape.EndB })
+                    foreach (var shape in CreateLeader(dimensionShape.Middle, end, dimension.Ending, brush, dimension.LineWidth)) yield return shape;
                 var value = new Border
                 {
                     Background = Brushes.Transparent, // clickable between the letters too
@@ -2211,7 +2214,7 @@ public sealed class MarkupCanvas : Canvas
         }
         : new Path { Data = SystemFontSource.Letters(font, text, fontSize), Fill = brush };
 
-    /// <summary>A line from <paramref name="from"/> to <paramref name="to"/>, ending at <paramref name="to"/> in a filled arrow or dot if asked.</summary>
+    /// <summary>A line from <paramref name="from"/> to <paramref name="to"/>, ending at <paramref name="to"/> in a filled arrow, dot or tick if asked.</summary>
     static IEnumerable<Shape> CreateLeader(ViewPoint from, ViewPoint to, LineEnding ending, Brush brush, double lineWidth)
     {
         var lineEnd = ending == LineEnding.Arrow ? LabelGeometry.ArrowLineEnd(from, to, lineWidth) : to; // the line's square end stays inside the head
@@ -2229,6 +2232,11 @@ public sealed class MarkupCanvas : Canvas
             SetLeft(dot, to.X - radius);
             SetTop(dot, to.Y - radius);
             yield return dot;
+        }
+        else if (ending == LineEnding.Tick)
+        {
+            var (a, b) = LabelGeometry.Tick(from, to, lineWidth);
+            yield return new Line { X1 = a.X, Y1 = a.Y, X2 = b.X, Y2 = b.Y, Stroke = brush, StrokeThickness = lineWidth };
         }
     }
 

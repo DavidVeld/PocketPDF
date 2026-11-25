@@ -48,7 +48,11 @@ static partial class AnnotationReader
             "/Circle" when cad.Elements.GetObject("/Center") is PdfArray center && Points(center) is [var middle] =>
                 new CadCircleMarkup { Center = middle, Radius = cad.Elements.GetReal("/Radius") },
             "/Dimension" when cad.Elements.GetObject("/Points") is PdfArray points && Points(points) is [var start, var end] && start != end =>
-                new CadDimensionMarkup { Start = start, End = end, Offset = cad.Elements.GetReal("/Offset"), MmPerPoint = cad.Elements.GetReal("/Scale") },
+                new CadDimensionMarkup
+                {
+                    Start = start, End = end, Offset = cad.Elements.GetReal("/Offset"), MmPerPoint = cad.Elements.GetReal("/Scale"),
+                    Ending = annotation.Elements.GetObject("/LE") is PdfArray { Elements.Count: > 0 } ends ? EndingOf(ends.Elements.GetName(0)) : LineEnding.Tick, // older files: ticks
+                },
             "/Hatch" when cad.Elements.GetObject("/Points") is PdfArray points && Points(points) is { Count: >= 3 } boundary =>
                 new CadHatchMarkup
                 {
@@ -220,7 +224,7 @@ static partial class AnnotationReader
     /// <summary>A /LE name as one of PocketPDF's endings: filled shapes count as a dot.</summary>
     static LineEnding EndingOf(string name) => name switch
     {
-        "/ClosedArrow" or "/OpenArrow" => LineEnding.Arrow, "/Circle" or "/Square" or "/Diamond" => LineEnding.Dot, _ => LineEnding.None,
+        "/ClosedArrow" or "/OpenArrow" => LineEnding.Arrow, "/Circle" or "/Square" or "/Diamond" => LineEnding.Dot, "/Slash" => LineEnding.Tick, _ => LineEnding.None,
     };
 
     static bool IsSeeThrough(PdfDictionary annotation) =>

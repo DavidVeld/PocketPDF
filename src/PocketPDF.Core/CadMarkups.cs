@@ -43,7 +43,7 @@ public sealed class CadCircleMarkup : CadMarkup, IFillable
 
 /// <summary>
 /// An aligned dimension between two points, drawn the usual drafting way: extension lines, a dimension line with oblique ticks
-/// and the length above it. It keeps the scale it was made at, as a measurement does. Typing a new length changes the
+/// (or another <see cref="Ending"/>) and the length above it. It keeps the scale it was made at, as a measurement does. Typing a new length changes the
 /// shapes its ends sit on (see <see cref="Dimensioning.Resize"/>).
 /// </summary>
 public sealed class CadDimensionMarkup : CadMarkup
@@ -57,6 +57,8 @@ public sealed class CadDimensionMarkup : CadMarkup
     public double Offset { get; set; }
     /// <summary>Real millimetres per PDF point, see <see cref="DrawingScale"/>.</summary>
     public double MmPerPoint { get; set; } = DrawingScale.PaperMmPerPoint;
+    /// <summary>How both ends of the dimension line end.</summary>
+    public LineEnding Ending { get; set; } = LineEnding.Tick;
 
     public double LengthMm => CadGeometry.Distance(Start, End) * MmPerPoint;
     public string ValueText => DrawingScale.FormatLength(LengthMm);

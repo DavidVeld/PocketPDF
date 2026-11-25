@@ -2166,7 +2166,8 @@ public partial class MainWindow : Window
         if (fontSize != null) SelectByTag(FontSizePicker, tag => double.Parse(tag, CultureInfo.InvariantCulture) == fontSize);
         LineEnding? ending = markup switch
         {
-            CalloutMarkup callout => callout.Ending, LineMarkup line => line.Ending, CloudMarkup { TextPosition: not null } cloud => cloud.Ending, _ => null,
+            CalloutMarkup callout => callout.Ending, LineMarkup line => line.Ending, CloudMarkup { TextPosition: not null } cloud => cloud.Ending,
+            CadDimensionMarkup dimension => dimension.Ending, _ => null,
         };
         if (markup is CloudMarkup area) SelectByTag(LineStylePicker, tag => tag == area.Style.ToString());
         if (markup is CadHatchMarkup hatch) SelectByTag(HatchPicker, tag => tag == hatch.Pattern.ToString());

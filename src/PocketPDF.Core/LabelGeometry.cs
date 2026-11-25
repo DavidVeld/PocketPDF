@@ -31,6 +31,19 @@ public static class LabelGeometry
     /// <summary>Radius of the filled dot a leader can end in: about as big as an arrow head is wide.</summary>
     public static double DotRadius(double lineWidth) => 1.5 + lineWidth;
 
+    /// <summary>
+    /// The oblique stroke a line can end in at <paramref name="tip"/>, 45° to the line: "/" on a level line, from either side,
+    /// so both ends of a dimension line slant the same way.
+    /// </summary>
+    public static (ViewPoint A, ViewPoint B) Tick(ViewPoint from, ViewPoint tip, double lineWidth)
+    {
+        double distance = CloudGeometry.Distance(from, tip), half = 2 + 1.5 * lineWidth; // 3.5 at 1 pt, as the dimension ticks were
+        if (distance < 0.001) return (tip, tip);
+        double dx = (tip.X - from.X) / distance, dy = (tip.Y - from.Y) / distance;
+        double tx = (dx + dy) / Math.Sqrt(2) * half, ty = (dy - dx) / Math.Sqrt(2) * half;
+        return (new(tip.X - tx, tip.Y - ty), new(tip.X + tx, tip.Y + ty));
+    }
+
     /// <summary>The three corners of a filled arrow head at the tip of a leader.</summary>
     static double ArrowLength(double lineWidth) => 4 + 3 * lineWidth;
 
