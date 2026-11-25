@@ -585,7 +585,7 @@
             </StatusBarItem>
             <StatusBarItem><TextBlock x:Name="NoticeStatus" Foreground="{DynamicResource TextFillColorSecondaryBrush}" /></StatusBarItem>
             <StatusBarItem DockPanel.Dock="Right">
-                <Button x:Name="ScaleButton" Click="OnScale" Padding="8,1" MinHeight="0" ToolTip="Drawing scale of this page, for measuring: pick one, or calibrate on a known length" />
+                <Button x:Name="ScaleButton" Click="OnScale" Padding="8,1" MinHeight="0" FontWeight="SemiBold" ToolTip="Drawing scale of this page, for measuring: pick one, or calibrate on a known length" />
             </StatusBarItem>
             <!-- On the right, so its changing width doesn't shift the CAD boxes. -->
             <StatusBarItem DockPanel.Dock="Right" Margin="0,0,6,0"><TextBlock x:Name="CursorStatus" ToolTip="Cursor position on the sheet, from its bottom-left corner" /></StatusBarItem>
@@ -669,7 +669,7 @@
                 </RadioButton>
                 <Separator />
                 <RadioButton x:Name="MeasureTool" Tag="Measure" Checked="OnToolChecked"
-                             ToolTip="Measure (M): click points on the drawing; they snap to line ends, crossings, circle centres, midpoints, square off the last point and lines (pick which next to Snap in the status bar). Double-click or Enter ends a distance or length; click the first point again for an area. Measurements clear on Esc or another tool (CAD dimensions stay). Shift: straight across or up. Ctrl: no snapping. Set the scale in the status bar; with none set, it takes the 1:### written furthest bottom right on the sheet">
+                             ToolTip="Measure (M): click points on the drawing; they snap to line ends, crossings, circle centres, midpoints, square off the last point and lines (pick which next to Snap in the status bar). Double-click or Enter ends a distance or length; click the first point again for an area. Measurements clear on Esc or another tool (CAD dimensions stay). Shift: straight across or up. Ctrl: no snapping. Set the scale in the status bar; with none set, it takes the 1:### written furthest bottom right on the sheet (shown orange until confirmed)">
                     <TextBlock Style="{StaticResource ToolIcon}" Text="&#xED5E;" />
                 </RadioButton>
                 <Button x:Name="CalibrateButton" Click="OnCalibrate"

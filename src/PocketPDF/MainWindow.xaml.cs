@@ -734,14 +734,17 @@ public partial class MainWindow : Window
     {
         LoadPageText();
         LoadLineWork();
-        FindScaleForMeasure();
+        FindScaleOnSheet();
     }
 
-    /// <summary>Measuring on a sheet with no scale set takes the scale written on it: the "1:###" furthest bottom right.</summary>
-    async void FindScaleForMeasure()
+    /// <summary>
+    /// A sheet with no scale set takes the one written on it, the "1:###" furthest bottom right, until the user confirms
+    /// or changes it (see <see cref="ShowScale"/>). Looked up once per page, as it is shown.
+    /// </summary>
+    async void FindScaleOnSheet()
     {
-        if (MarkupLayer.Tool != MarkupTool.Measure || _doc is not { ComparePdf: null } doc || CurrentPageIndex < 0
-            || doc.Loaded.MmPerPointByPage.ContainsKey(CurrentPageIndex)) return;
+        if (_doc is not { ComparePdf: null } doc || CurrentPageIndex < 0
+            || doc.Loaded.MmPerPointByPage.ContainsKey(CurrentPageIndex) || doc.FoundScaleByPage.ContainsKey(CurrentPageIndex)) return;
         var pdf = doc.Pdf;
         int pageIndex = CurrentPageIndex;
         int? ratio;
@@ -754,14 +757,13 @@ public partial class MainWindow : Window
             NoticeStatus.Text = $"Couldn't read the text on this page: {ex.Message}";
             return;
         }
-        if (doc != _doc || pageIndex != CurrentPageIndex || MarkupLayer.Tool != MarkupTool.Measure || doc.Loaded.MmPerPointByPage.ContainsKey(pageIndex)) return; // the user moved on meanwhile
-        if (ratio is not { } found)
-        {
+        doc.FoundScaleByPage[pageIndex] = ratio is { } found ? DrawingScale.FromRatio(found) : null;
+        if (doc != _doc || pageIndex != CurrentPageIndex || doc.Loaded.MmPerPointByPage.ContainsKey(pageIndex)) return; // the user moved on meanwhile
+        ShowScale();
+        if (ratio != null)
+            NoticeStatus.Text = $"Scale 1:{ratio} read from the sheet and used for measuring. Click it in the status bar to confirm or change it";
+        else if (MarkupLayer.Tool == MarkupTool.Measure)
             NoticeStatus.Text = "No scale ref found on the sheet: measuring at 1:1. Set the scale in the status bar, or calibrate";
-            return;
-        }
-        SetScale(DrawingScale.FromRatio(found));
-        NoticeStatus.Text = $"Scale 1:{found} found on the sheet, so measuring at 1:{found}. Change it in the status bar if it's wrong";
     }
 
     /// <summary>Reads the page's line work for snapping. Only while a tool that snaps is on: big CAD sheets take a moment.</summary>
@@ -794,13 +796,43 @@ public partial class MainWindow : Window
 
     // ---- Scale --------------------------------------------------------------------------------
 
-    double CurrentMmPerPoint => _doc?.Loaded.MmPerPointByPage.GetValueOrDefault(CurrentPageIndex, DrawingScale.PaperMmPerPoint) ?? DrawingScale.PaperMmPerPoint;
+    /// <summary>The page's scale: the one set (by the user, or saved with the file), else the one written on the sheet, else 1:1.</summary>
+    double CurrentMmPerPoint =>
+        _doc is not { } doc ? DrawingScale.PaperMmPerPoint
+        : doc.Loaded.MmPerPointByPage.TryGetValue(CurrentPageIndex, out double set) ? set
+        : FoundScale ?? DrawingScale.PaperMmPerPoint;
 
+    /// <summary>The scale written on the current sheet, while none is set.</summary>
+    double? FoundScale => _doc is { } doc && !doc.Loaded.MmPerPointByPage.ContainsKey(CurrentPageIndex) ? doc.FoundScaleByPage.GetValueOrDefault(CurrentPageIndex) : null;
+
+    bool HasScale => _doc?.Loaded.MmPerPointByPage.ContainsKey(CurrentPageIndex) == true || FoundScale != null;
+
+    static readonly Brush ScaleSetBrush = Frozen("#43A047"), ScaleFoundBrush = Frozen("#EF6C00"), ScaleMissingBrush = Frozen("#E53935");
+
+    static SolidColorBrush Frozen(string color)
+    {
+        var brush = (SolidColorBrush)new BrushConverter().ConvertFromString(color)!;
+        brush.Freeze();
+        return brush;
+    }
+
+    /// <summary>The scale in the status bar: green once set, orange while read off the sheet, red when there is none.</summary>
     void ShowScale()
     {
         MarkupLayer.MmPerPoint = CurrentMmPerPoint;
-        bool isSet = _doc?.Loaded.MmPerPointByPage.ContainsKey(CurrentPageIndex) == true;
-        ScaleButton.Content = isSet ? $"Scale {DrawingScale.Describe(CurrentMmPerPoint)}" : "Scale not set (1:1)";
+        string scale = DrawingScale.Describe(CurrentMmPerPoint);
+        var (text, brush, tip) =
+            _doc?.Loaded.MmPerPointByPage.ContainsKey(CurrentPageIndex) == true
+                ? ($"Scale {scale}", ScaleSetBrush, "Drawing scale of this page, set by hand: click to pick another or calibrate")
+            : FoundScale != null
+                ? ($"Scale {scale}?", ScaleFoundBrush, $"Drawing scale of this page as written on the sheet, not confirmed yet: click and pick {scale} (or calibrate) to confirm it")
+            : _doc?.FoundScaleByPage.ContainsKey(CurrentPageIndex) == true
+                ? ("Scale not set (1:1)", ScaleMissingBrush, "No 1:### found on the sheet, so measuring at 1:1: click to pick the scale or calibrate")
+                : ("Scale not set (1:1)", null, "Drawing scale of this page, for measuring: pick one, or calibrate on a known length");
+        ScaleButton.Content = text;
+        ScaleButton.ToolTip = tip;
+        if (brush == null) ScaleButton.ClearValue(ForegroundProperty);
+        else ScaleButton.Foreground = brush;
         UpdateCadTools();
     }
 
@@ -969,7 +1001,7 @@ public partial class MainWindow : Window
     /// <summary>The CAD tools take real lengths, so they're on only once the sheet has a scale.</summary>
     void UpdateCadTools()
     {
-        bool on = _doc?.ComparePdf == null && _doc?.Loaded.MmPerPointByPage.ContainsKey(CurrentPageIndex) == true;
+        bool on = _doc?.ComparePdf == null && HasScale;
         foreach (var button in new System.Windows.Controls.Primitives.ButtonBase[] { CadLineTool, CadPolylineTool, CadRectangleTool, CadCircleTool, CadOffsetTool, CadTrimTool, CadHatchTool, CadDimensionTool, CadJoinButton })
             button.IsEnabled = on;
         if (!on && MarkupCanvas.IsCadTool(MarkupLayer.Tool)) SelectTool.IsChecked = true;
@@ -987,6 +1019,12 @@ public partial class MainWindow : Window
     {
         if (_doc == null) return;
         var menu = new ContextMenu { PlacementTarget = ScaleButton, Placement = System.Windows.Controls.Primitives.PlacementMode.Top };
+        if (FoundScale is { } found)
+        {
+            var confirm = new MenuItem { Header = $"Confirm {DrawingScale.Describe(found)} (as written on the sheet)", FontWeight = FontWeights.SemiBold };
+            confirm.Click += (_, _) => SetScale(found);
+            menu.Items.Add(confirm);
+        }
         var calibrate = new MenuItem { Header = "Calibrate… (click two points of a known length)" };
         calibrate.Click += (_, _) => StartCalibration();
         menu.Items.Add(calibrate);

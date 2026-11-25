@@ -27,6 +27,12 @@ public sealed class DocumentTab(LoadedPdf loaded, PdfRenderer pdf, string filePa
     /// <summary>A page scale set since opening or saving: not a markup, so not in the undo history.</summary>
     public bool ScaleChanged { get; set; }
 
+    /// <summary>
+    /// The scale written on each page looked at so far (null: none found), in mm per point. Used until the user sets one,
+    /// and never saved: a scale only goes into the file once the user confirms it.
+    /// </summary>
+    public Dictionary<int, double?> FoundScaleByPage { get; } = [];
+
     /// <summary>A page turned since opening or saving: not a markup either.</summary>
     public bool PageTurned { get; set; }
 

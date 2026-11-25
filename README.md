@@ -15,8 +15,9 @@ are down the right, and pages, snap, zoom and the drawing scale are in the statu
   line weight, line end and text size. Select, move, edit, copy and paste them, also between open documents.
 - **Fills**: any closed shape (rectangle, cloud or area, closed CAD polyline or circle) can be filled with a colour
   as hatch, crosshatch or solid.
-- **Measuring**: set the sheet's scale (pick 1:50, 1:100… or calibrate on a known length), or let the Measure tool
-  take it from the sheet: with no scale set, it uses the "1:###" written furthest bottom right (NTS is skipped). Then measure
+- **Measuring**: set the sheet's scale (pick 1:50, 1:100… or calibrate on a known length), or take it from the
+  sheet: a page with no scale set uses the "1:###" written furthest bottom right (NTS is skipped). The scale in the status
+  bar is green once set, orange while only read off the sheet (confirm it from its menu), and red when there is none. Then measure
   distances, lengths and areas. Measurements are temporary: they go when you press Esc or pick another tool (use
   the CAD dimension tool for dimensions that stay on the sheet). Points snap to the drawing's line ends, crossings, circle centres and midpoints,
   square off the last point placed (perpendicular), and to the corners, edges, circle centres and quarter points of the
