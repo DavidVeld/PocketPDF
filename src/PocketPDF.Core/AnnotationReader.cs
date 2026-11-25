@@ -6,7 +6,7 @@ namespace PocketPDF.Core;
 
 /// <summary>
 /// Reads the annotations PocketPDF can edit (free text, callouts, clouds, ink, lines, rectangles, measurements) back into markups,
-/// whether PocketPDF, Bluebeam or Acrobat wrote them. Anything else returns null and stays untouched in the file.
+/// whether PocketPDF or another viewer wrote them. Anything else returns null and stays untouched in the file.
 /// </summary>
 static partial class AnnotationReader
 {
@@ -226,7 +226,8 @@ static partial class AnnotationReader
     static bool IsSeeThrough(PdfDictionary annotation) =>
         annotation.Elements.ContainsKey("/CA") && annotation.Elements.GetReal("/CA") < 1;
 
-    static PdfItem Resolve(PdfItem item) => item is PdfSharp.Pdf.Advanced.PdfReference reference ? reference.Value : item;
+    /// <summary>The object a reference points to, or the item itself if it is no reference.</summary>
+    internal static PdfItem? Resolve(PdfItem? item) => item is PdfSharp.Pdf.Advanced.PdfReference reference ? reference.Value : item;
 
     static bool IsCloud(PdfDictionary annotation) =>
         annotation.Elements.GetName("/IT") == "/PolygonCloud"

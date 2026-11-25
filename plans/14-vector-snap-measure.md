@@ -9,7 +9,7 @@ The PDFium bundled with Docnet exports every function needed (checked: `FPDFPage
 1. **Extract (Core, `VectorExtractor`):** for one page, walk the page objects. Recurse into form XObjects, multiplying matrices on the way down. For each path object, read its segments (moveto / lineto / bezierto / close) and turn them into line segments in PDF space; flatten Béziers into ~8 pieces. Also keep the end points and centres of arcs/circles where cheap. Output: `List<(PdfPoint A, PdfPoint B)>`. Cache per page; build it off the UI thread the first time a snap tool is used.
 2. **Snap index (Core, `SnapIndex`):** a uniform grid of cells holding segments. Query `Snap(point, radius)` returns the best candidate, by priority: **endpoint** > **intersection** (of segments in nearby cells) > **midpoint** > **nearest point on a line**. Radius is ~10 screen pixels, converted to points at the current zoom. Unit-test it with hand-made segments.
 3. **Snap feedback (UI):** while a snap-aware tool is active, show a marker at the snap point. The marker's shape shows the kind: square = endpoint, X = intersection, triangle = midpoint, hourglass = nearest. Hold **Shift** to snap to horizontal/vertical from the previous point, and **Alt** to turn snapping off.
-4. **Calibrate:** "Set scale…" offers presets (1:1, 1:5, 1:10, 1:20, 1:50, 1:100, 1:200, 1:500, 1:1250) or "Calibrate": click two points with a known length, type the real distance in mm. Store it per page. Save it in the PDF as a `/Measure` (viewport) dictionary, so Bluebeam picks up the same scale, and read it back if the file already has one (Bluebeam writes them).
+4. **Calibrate:** "Set scale…" offers presets (1:1, 1:5, 1:10, 1:20, 1:50, 1:100, 1:200, 1:500, 1:1250) or "Calibrate": click two points with a known length, type the real distance in mm. Store it per page. Save it in the PDF as a `/Measure` (viewport) dictionary, so other viewers pick up the same scale, and read it back if the file already has one (other viewers write them).
 5. **Measure tools:**
    - **Distance:** click two snapped points.
    - **Polylength:** a chain of points, double-click to end.
@@ -22,7 +22,7 @@ The PDFium bundled with Docnet exports every function needed (checked: `FPDFPage
 - Scanned sheets have no vectors: show "No line work to snap to on this page".
 - Hatching makes a lot of noise: start without filtering, and add a "skip filled paths" option only if needed.
 
-**Done when:** on a Revit A1 sheet, the snap marker lands exactly on line ends and wall intersections at any zoom. A 1:50 calibrated distance between two gridlines matches the drawn dimension to within 1 mm. Measurements saved here open in Bluebeam as measurements with the same values. Extracting the heaviest sample takes under 1 s.
+**Done when:** on a CAD-exported A1 sheet, the snap marker lands exactly on line ends and wall intersections at any zoom. A 1:50 calibrated distance between two gridlines matches the drawn dimension to within 1 mm. Measurements saved here open in other viewers as measurements with the same values. Extracting the heaviest sample takes under 1 s.
 
 ## Prompt
 
@@ -43,5 +43,5 @@ Step 3, UI (src/PocketPDF):
 - Live readout of distance/length/area in the status bar while drawing. The placed measurement shows its value as a label.
 - Measurements go through MarkupsChanged, so they're undoable and editable like other markups.
 
-Performance target: extraction under 1 s for the heaviest file in data/, snap query under 1 ms. Run `dotnet build` and `dotnet test`. Check by hand on a Revit sheet: calibrate at the drawing's scale, measure between two gridlines, compare with the drawn dimension. Save, open in Bluebeam (if available), and confirm the measurements and scale are recognised. Add a "Phase 14 … **Done.**" section to PLAN.md with the measured timings.
+Performance target: extraction under 1 s for the heaviest file in data/, snap query under 1 ms. Run `dotnet build` and `dotnet test`. Check by hand on a CAD-exported sheet: calibrate at the drawing's scale, measure between two gridlines, compare with the drawn dimension. Save, open in another viewer (if available), and confirm the measurements and scale are recognised. Add a "Phase 14 … **Done.**" section to PLAN.md with the measured timings.
 ```

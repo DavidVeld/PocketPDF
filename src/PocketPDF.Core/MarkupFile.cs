@@ -1,6 +1,7 @@
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
+using static PocketPDF.Core.AnnotationReader;
 
 namespace PocketPDF.Core;
 
@@ -15,7 +16,7 @@ public sealed record LoadedPdf(
 
     /// <summary>
     /// The drawing scale of each page that has one, as real mm per point (see <see cref="DrawingScale"/>): read from the
-    /// page's viewport (/VP, as Bluebeam writes it) or set by the user. Saving writes a viewport for pages that have none.
+    /// page's viewport (/VP, as other viewers write it) or set by the user. Saving writes a viewport for pages that have none.
     /// </summary>
     public Dictionary<int, double> MmPerPointByPage { get; init; } = [];
 
@@ -37,7 +38,7 @@ public sealed record LoadedPdf(
 
 /// <summary>The PDF needs a password just to be opened.</summary>
 public sealed class PasswordProtectedPdfException() : Exception(
-    "This PDF is password-protected. PocketPDF can't open password-protected files: remove the password in Bluebeam or Acrobat first.");
+    "This PDF is password-protected. PocketPDF can't open password-protected files: remove the password first.");
 
 /// <summary>Loads and saves markups as standard PDF annotations. Annotations PocketPDF can't edit are left untouched.</summary>
 public static class MarkupFile
@@ -113,7 +114,7 @@ public static class MarkupFile
             for (int i = annotations.Elements.Count - 1; i >= 0; i--)
             {
                 if (!annotationsToHide.Contains(AnnotationKey(annotations.Elements[i], pageIndex, i))) continue;
-                if (Resolve(annotations.Elements[i]) is { } annotation) removedAnnotations.Add(annotation);
+                if (Resolve(annotations.Elements[i]) is PdfDictionary annotation) removedAnnotations.Add(annotation);
                 annotations.Elements.RemoveAt(i);
             }
             RemoveDependents(annotations, removedAnnotations);
@@ -155,7 +156,7 @@ public static class MarkupFile
                 var removedAnnotations = new HashSet<PdfDictionary>();
                 for (int i = annotations.Elements.Count - 1; i >= 0; i--)
                 {
-                    if (Resolve(annotations.Elements[i]) is not { } annotation) continue;
+                    if (Resolve(annotations.Elements[i]) is not PdfDictionary annotation) continue;
                     if (AnnotationReader.TryRead(annotation, geometryInFile) == null) continue; // not ours to touch
 
                     if (!markupsFromFile.TryGetValue(AnnotationKey(annotations.Elements[i], pageIndex, i), out var markup))
@@ -174,7 +175,7 @@ public static class MarkupFile
             foreach (var markup in markups.Where(markup => markup.Origin == null))
                 AnnotationsOf(page).Elements.Add(AnnotationWriter.Create(document, markup, geometry).Reference!);
 
-            // shortcut: a page that already has viewports (Bluebeam's) keeps them as they are, so a scale set here isn't saved on it; write into them if that matters.
+            // shortcut: a page that already has viewports (another viewer's) keeps them as they are, so a scale set here isn't saved on it; write into them if that matters.
             if (loaded.MmPerPointByPage.TryGetValue(pageIndex, out double mmPerPoint) && !page.Elements.ContainsKey("/VP"))
             {
                 var viewport = new PdfDictionary(document)
@@ -232,7 +233,7 @@ public static class MarkupFile
 
         for (int i = 0; i < annotations.Elements.Count; i++)
         {
-            if (Resolve(annotations.Elements[i]) is not { } annotation) continue;
+            if (Resolve(annotations.Elements[i]) is not PdfDictionary annotation) continue;
             if (AnnotationReader.TryRead(annotation, geometry) is not { } markup) continue;
             var rect = annotation.Elements.GetRectangle("/Rect");
             var bounds = new PdfRect(Math.Min(rect.X1, rect.X2), Math.Min(rect.Y1, rect.Y2), Math.Max(rect.X1, rect.X2), Math.Max(rect.Y1, rect.Y2));
@@ -258,7 +259,7 @@ public static class MarkupFile
             removedAny = false;
             for (int i = annotations.Elements.Count - 1; i >= 0; i--)
             {
-                if (Resolve(annotations.Elements[i]) is not { } annotation) continue;
+                if (Resolve(annotations.Elements[i]) is not PdfDictionary annotation) continue;
                 bool isPopupOfRemoved = annotation.Elements.GetObject("/Parent") is PdfDictionary parent && removedAnnotations.Contains(parent);
                 bool isReplyToRemoved = annotation.Elements.GetObject("/IRT") is PdfDictionary repliedTo && removedAnnotations.Contains(repliedTo);
                 if (!isPopupOfRemoved && !isReplyToRemoved) continue;
@@ -276,13 +277,6 @@ public static class MarkupFile
         page.Elements["/Annots"] = annotations;
         return annotations;
     }
-
-    static PdfDictionary? Resolve(PdfItem item) => item switch
-    {
-        PdfReference reference => reference.Value as PdfDictionary,
-        PdfDictionary dictionary => dictionary,
-        _ => null,
-    };
 
     /// <summary>Opens a PDF for changing. Never prompts for a password: if one is needed, it gives up and calls <paramref name="onPasswordNeeded"/>.</summary>
     static PdfDocument OpenForEditing(byte[] pdfBytes, Action? onPasswordNeeded = null)

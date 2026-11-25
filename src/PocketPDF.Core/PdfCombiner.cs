@@ -29,7 +29,7 @@ public static class PdfCombiner
                 // Combining would hand out an unprotected copy, so the author's "no changes" restriction is respected.
                 if (IsProtectedAgainstChanges(inputPath))
                 {
-                    skipped.Add(new(inputPath, "it's protected against changes (combine it in Bluebeam or Acrobat)"));
+                    skipped.Add(new(inputPath, "it's protected against changes"));
                     continue;
                 }
                 foreach (var page in input.Pages) output.AddPage(page);

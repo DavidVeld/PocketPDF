@@ -49,7 +49,7 @@ sealed class TestPdf : IDisposable
     }
 
     /// <summary>
-    /// One 400 x 400 page with a text box written by "another viewer" the way Bluebeam does it: with rich text, a subject,
+    /// One 400 x 400 page with a text box written by "another viewer" the way a desktop viewer does it: with rich text, a subject,
     /// a custom column, a pop-up and a reply. PocketPDF knows none of those keys and must not lose them.
     /// </summary>
     public static TestPdf CreateWithColleagueMarkup()

@@ -34,7 +34,7 @@ public abstract class Markup
 
     /// <summary>
     /// True while the markup is exactly as read from the file. The page then shows it with the file's own appearance
-    /// (as Bluebeam or Acrobat drew it), and the markup layer only needs <see cref="FileBounds"/> to let the user select it.
+    /// (as the viewer that wrote it drew it), and the markup layer only needs <see cref="FileBounds"/> to let the user select it.
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsUnchangedFromFile => Origin != null && Fingerprint() == Origin.Fingerprint;

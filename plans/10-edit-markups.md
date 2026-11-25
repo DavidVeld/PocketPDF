@@ -12,13 +12,13 @@ Today the Select tool can select, move, restyle and delete a markup, but not cha
    - **Highlight:** no grips; move and restyle only.
 3. **One undo step per edit.** Raise `MarkupsChanged` once on mouse-up or text commit, not on every mouse move. Phase 9 then makes it undoable for free.
 4. **Font size picker** in the toolbar (8, 10, 12, 14, 18, 24 pt). It applies to the selected Text or Callout, and to new ones, the same way `ApplyStyle` works for colour. Selecting a markup sets the colour, weight and size pickers to its values, so the user can see them.
-5. **Bluebeam markups:** editing one turns it into "changed". The existing logic already hides the file's appearance and draws ours, and saving updates the annotation in place. Nothing new is needed, but test it.
+5. **Markups from other viewers:** editing one turns it into "changed". The existing logic already hides the file's appearance and draws ours, and saving updates the annotation in place. Nothing new is needed, but test it.
 
 Hit-testing for grips: draw them as `Rectangle`s tagged with `(markup, gripIndex)`, so the existing `OriginalSource.Tag` hit-test keeps working.
 
 **Skipped:** rotation, resizing text boxes, rich text, multi-select. Name them as later options.
 
-**Done when:** you can retype the text of a Text and a Callout, move a callout's arrow tip alone, drag, add and remove cloud vertices, and change font size, all at 25% and 400% zoom. Every one of these is a single Ctrl+Z, and saved edits open correctly in Bluebeam.
+**Done when:** you can retype the text of a Text and a Callout, move a callout's arrow tip alone, drag, add and remove cloud vertices, and change font size, all at 25% and 400% zoom. Every one of these is a single Ctrl+Z, and saved edits open correctly in other viewers.
 
 ## Prompt
 
@@ -36,7 +36,7 @@ Build:
 3. A font size ComboBox (8, 10, 12, 14, 18, 24) next to the line weight picker in MainWindow.xaml, in the same style. It applies to the selected Text/Callout and to new ones (extend ApplyStyle or add ApplyFontSize). When a markup is selected, set the colour, weight and font pickers to its values without firing a restyle.
 4. Put any pure geometry (nearest point on a polygon edge, insert/remove vertex) in Core with unit tests.
 
-Check that editing a markup loaded from a Bluebeam file still saves in place (keeps its ID, author, replies). Add a test to MarkupFileTests if it isn't already covered.
+Check that editing a markup loaded from a file another viewer marked up still saves in place (keeps its ID, author, replies). Add a test to MarkupFileTests if it isn't already covered.
 
 Run `dotnet build` and `dotnet test`. Launch the app on a sample from data/ and try each edit at 25% and 400% zoom, with Ctrl+Z after each. Add a "Phase 10 … **Done.**" section to PLAN.md. Out of scope: rotation, text box resizing, multi-select.
 ```

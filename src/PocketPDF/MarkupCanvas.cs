@@ -1800,7 +1800,7 @@ public sealed class MarkupCanvas : Canvas
     {
         if (markup is not CadMarkup && markup.IsUnchangedFromFile && markup.FileBounds is { } fileBounds) // CAD is always drawn here, for the layer switch
         {
-            // The page image already shows this markup as the file draws it (Bluebeam's wrapping, fills, fonts...).
+            // The page image already shows this markup as the file draws it (another viewer's wrapping, fills, fonts...).
             // Only an invisible click target goes here, outlined while selected.
             var area = _page!.ToView(fileBounds);
             if (markup is PlacedSheetMarkup)

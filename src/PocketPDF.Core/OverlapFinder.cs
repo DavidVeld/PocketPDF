@@ -22,7 +22,7 @@ public static class OverlapFinder
         var areas = new List<ViewRect>();
         foreach (var character in text.Characters)
         {
-            // Only letters and digits: punctuation such as the "__" divider in Revit section tags is line work itself.
+            // Only letters and digits: punctuation such as the "__" divider in CAD section tags is line work itself.
             if (!character.HasBox || !char.IsLetterOrDigit(character.Char)) continue;
             var box = character.Box;
             if (!IsDrawn(box, withText, withoutText, pixelsPerPoint)) continue; // invisible text, such as the searchable layer of a scan

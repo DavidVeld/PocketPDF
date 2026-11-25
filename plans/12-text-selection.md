@@ -17,9 +17,9 @@
    - Also offer **"Highlight selection"** on right-click. It turns the selected line rectangles into a `HighlightMarkup` (Highlight already exists).
 4. **Ctrl+F find** is the natural next step on the same data. Note it as a follow-up; don't build it now.
 
-**Limitation to state up front:** many CAD exports (Revit, AutoCAD with SHX fonts) draw text as line strokes, not as text. There is nothing to select on those. The tool should say "No selectable text on this page" in the status bar, not just do nothing. Scanned sheets would need OCR, which is out of scope.
+**Limitation to state up front:** many CAD exports (SHX fonts, for one) draw text as line strokes, not as text. There is nothing to select on those. The tool should say "No selectable text on this page" in the status bar, not just do nothing. Scanned sheets would need OCR, which is out of scope.
 
-**Done when:** on a Word-exported PDF and on a Revit sheet with TrueType text, dragging selects in reading order, Ctrl+C pastes the right text with line breaks into Notepad, and rotated pages (/Rotate 90) select correctly.
+**Done when:** on a Word-exported PDF and on a CAD-exported sheet with TrueType text, dragging selects in reading order, Ctrl+C pastes the right text with line breaks into Notepad, and rotated pages (/Rotate 90) select correctly.
 
 ## Prompt
 

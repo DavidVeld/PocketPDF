@@ -1,9 +1,10 @@
 using PdfSharp.Pdf;
+using static PocketPDF.Core.AnnotationReader;
 
 namespace PocketPDF.Core;
 
 /// <summary>
-/// Reads and writes a PDF /Measure dictionary (ISO 32000 12.9, "rectilinear"), which Bluebeam and Acrobat use for a
+/// Reads and writes a PDF /Measure dictionary (ISO 32000 12.9, "rectilinear"), which PDF viewers use for a
 /// measurement's or a viewport's scale. Its /X entry says how many units one PDF point is.
 /// </summary>
 static class MeasureDictionary
@@ -42,6 +43,4 @@ static class MeasureDictionary
         double? mmPerUnit = DrawingScale.MmPerUnit(first.Elements.GetString("/U"));
         return conversion > 0 && mmPerUnit is { } unit ? conversion * unit : null;
     }
-
-    static PdfItem? Resolve(PdfItem? item) => item is PdfSharp.Pdf.Advanced.PdfReference reference ? reference.Value : item;
 }

@@ -37,7 +37,7 @@ static class AnnotationWriter
     {
         var annotation = new PdfDictionary(document);
         annotation.Elements["/NM"] = new PdfString(Guid.NewGuid().ToString());
-        annotation.Elements["/T"] = new PdfString(Environment.UserName, PdfStringEncoding.Unicode); // author, shown in Bluebeam's markup list
+        annotation.Elements["/T"] = new PdfString(Environment.UserName, PdfStringEncoding.Unicode); // author, shown in other viewers' markup lists
         Write(document, annotation, markup, page);
         document.Internals.AddObject(annotation);
         return annotation;
@@ -45,7 +45,7 @@ static class AnnotationWriter
 
     /// <summary>
     /// Rewrites an existing annotation after the markup was changed. Its ID, author, replies, pop-up and any keys
-    /// PocketPDF doesn't know (Bluebeam's subject, columns, fill...) stay as they were.
+    /// PocketPDF doesn't know (another viewer's subject, columns, fill...) stay as they were.
     /// </summary>
     public static void Update(PdfDocument document, PdfDictionary annotation, Markup markup, PageGeometry page)
     {
@@ -413,9 +413,9 @@ static class AnnotationWriter
         annotation.Elements["/Subtype"] = new PdfName("/FreeText");
         annotation.Elements["/Contents"] = new PdfString(text.Replace("\n", "\r"), PdfStringEncoding.Unicode);
         annotation.Elements["/DA"] = new PdfString($"/{AppearanceBuilder.FontResourceName} {size} Tf {AppearanceBuilder.ColorComponents(color)} rg");
-        // A viewer that redraws the text (Acrobat, Bluebeam) takes the font from here.
+        // A viewer that redraws the text takes the font from here.
         annotation.Elements["/DS"] = new PdfString($"font: {(font == null ? "Helvetica" : $"'{font}'")},sans-serif {size}pt; text-align:left; color:{color}");
-        // Acrobat and Bluebeam use this to keep the text upright on rotated pages when they redraw it.
+        // Viewers use this to keep the text upright on rotated pages when they redraw it.
         if (page.Rotation != 0) annotation.Elements["/Rotate"] = new PdfInteger(page.Rotation);
         else annotation.Elements.Remove("/Rotate"); // a page turned back upright
     }
@@ -429,7 +429,7 @@ static class AnnotationWriter
         if (properties.Elements.GetObject("/OCGs") is not PdfArray groups)
             properties.Elements["/OCGs"] = groups = new PdfArray(document);
         foreach (var item in groups.Elements)
-            if ((item is PdfSharp.Pdf.Advanced.PdfReference reference ? reference.Value : item) is PdfDictionary group
+            if (AnnotationReader.Resolve(item) is PdfDictionary group
                 && group.Elements.GetString("/Name") == CadLayerName) return group;
 
         var layer = new PdfDictionary(document) { Elements = { ["/Type"] = new PdfName("/OCG"), ["/Name"] = new PdfString(CadLayerName) } };

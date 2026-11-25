@@ -4,7 +4,7 @@ A desktop PDF viewer for drawings, built in WPF on .NET 10. It does markups (tex
 
 **Folders**
 - `src/PocketPDF`: the WPF app (window, markup canvas).
-- `src/PocketPDF.Core`: everything with no WPF in it: rendering, page geometry, the markup model. Reusable from IssueBuddy or Revit later.
+- `src/PocketPDF.Core`: everything with no WPF in it: rendering, page geometry, the markup model. Reusable from other tools later.
 - `tests/PocketPDF.Core.Tests`: xUnit tests. Run them with `dotnet test`.
 - `img`: icons and screenshots.
 - `data`: sample drawings for manual testing. PDFs in it are git-ignored, because they're client data.
@@ -53,24 +53,24 @@ Every phase ends in something you can run and check. Don't start the next phase 
    - **Text:** `/Subtype /FreeText`, with `/DA` (font and colour) and `/Contents`.
    - **Callout:** `/FreeText` with `/IT /FreeTextCallout`, `/CL` (callout line points) and `/RD`.
    - **Cloud:** `/Polygon` with `/Vertices` and `/BE << /S /C /I 1 >>`.
-2. **Write an appearance stream (`/AP`) for every annotation.** Without one, some viewers (Bluebeam, browsers, printers) show nothing. This is the step most likely to bite.
+2. **Write an appearance stream (`/AP`) for every annotation.** Without one, some viewers (desktop PDF viewers, browsers, printers) show nothing. This is the step most likely to bite.
 3. **Load:** read annotations of these three subtypes back into the markup model so they can be edited. Render the page **without** annotations so they don't appear twice.
 4. **Save As versus Save:** use Save As by default. Only overwrite the original after the user confirms, because these are issued drawings.
-5. **Leave unknown annotations alone:** annotations we don't edit (Bluebeam stamps and so on) must pass through untouched.
+5. **Leave unknown annotations alone:** annotations we don't edit (stamps from other viewers and so on) must pass through untouched.
 6. **View-only fallback:** if PDFsharp can't read a file that PDFium can, it opens view-only, with markups and Save switched off. One of 60 PDFs on the dev machine needed this.
 
-**Done when:** a file saved here opens in **Bluebeam and Acrobat** with every markup visible and editable, and a Bluebeam-marked file opens here without losing its markups.
+**Done when:** a file saved here opens in **other PDF viewers** with every markup visible and editable, and a file marked up in another viewer opens here without losing its markups.
 
 ## Phase 4 – Round-trip hardening (½ day)
-Test with real files: drawings exported from Revit, drawings already marked up in Bluebeam, scanned sheets, and password-protected PDFs (show a clear error message, don't crash). Fix whatever breaks.
+Test with real files: drawings exported from CAD, drawings already marked up in other viewers, scanned sheets, and password-protected PDFs (show a clear error message, don't crash). Fix whatever breaks.
 
-**Done.** A survey opened, saved and reopened 988 local PDFs, 50 of which carry 3,509 Bluebeam markups. It found and fixed:
-- **Saving rewrote every markup.** It dropped Bluebeam's rich text, subject, fill, columns and replies. Now unchanged markups are saved exactly as they were. Changed ones are updated in place, keeping their ID, author, replies and unknown keys and dropping only the stale rich text. Deleted ones are removed together with their pop-ups and replies.
-- **Bluebeam markups looked different on screen.** No text wrapping, fills or fonts. Now unchanged markups show their own appearance from the file. PocketPDF draws a markup itself only once it's changed, and the page is then redrawn without the file's version.
+**Done.** A survey opened, saved and reopened 988 local PDFs, 50 of which carry 3,509 markups from another viewer. It found and fixed:
+- **Saving rewrote every markup.** It dropped other viewers' rich text, subject, fill, columns and replies. Now unchanged markups are saved exactly as they were. Changed ones are updated in place, keeping their ID, author, replies and unknown keys and dropping only the stale rich text. Deleted ones are removed together with their pop-ups and replies.
+- **Markups from other viewers looked different on screen.** No text wrapping, fills or fonts. Now unchanged markups show their own appearance from the file. PocketPDF draws a markup itself only once it's changed, and the page is then redrawn without the file's version.
 - **Password-protected files.** A file that needs a password to open gives a clear message. A file only protected against changes opens view-only.
 - **Damaged files** give "isn't a valid PDF, or it is damaged" instead of an internal error.
 
-Still open: a Bluebeam text box you edit is redrawn in PocketPDF's simpler style, with no word wrap or fill, until Bluebeam redraws it.
+Still open: a text box from another viewer that you edit is redrawn in PocketPDF's simpler style, with no word wrap or fill, until that viewer redraws it.
 
 ## Phase 5 – Overlay compare, same page size (1 day)
 1. Choose "Compare with…" and pick the old revision.
@@ -132,7 +132,7 @@ Plan and prompt: [plans/09-undo-redo.md](plans/09-undo-redo.md).
 - **How it works:** after every change, the app keeps a copy of that page's markups. Undo puts the previous copy back. No action needs its own undo code, so new tools are undoable for free as long as they raise `MarkupsChanged`.
 - **What counts as one step:** each add, move, restyle and delete. One Auto-cloud click is one step, however many clouds it adds. The app keeps up to 100 steps.
 - **Other pages:** undoing a change on another page jumps to that page first.
-- **Markups from other apps:** undoing a change to a Bluebeam markup makes it count as unchanged again. The page then shows Bluebeam's own appearance, and saving leaves the annotation untouched. This needed a fix: the code that works out which file markups to hide now matches them by annotation, as saving already did, instead of by object.
+- **Markups from other apps:** undoing a change to another viewer's markup makes it count as unchanged again. The page then shows that viewer's own appearance, and saving leaves the annotation untouched. This needed a fix: the code that works out which file markups to hide now matches them by annotation, as saving already did, instead of by object.
 - **Unsaved changes:** undoing back to the last save (or to the opened file) clears the `*` in the title.
 - **Text being typed:** while the text box has focus, Ctrl+Z is the text box's own undo. Clicking Undo first finishes the text, as its own step.
 - **Checked:** 6 new unit tests. In the app, a highlighter stroke undid and redid, and moving a file note then undoing put it back in the file's appearance with the `*` cleared.
@@ -142,10 +142,10 @@ Plan and prompt: [plans/09-undo-redo.md](plans/09-undo-redo.md).
 Plan and prompt: [plans/10-edit-markups.md](plans/10-edit-markups.md).
 
 **Built; app check still to finish.** With the Select tool:
-- **Edit text:** double-click a text or callout, or select it and press F2. The text box opens with its text. Enter keeps the change, Esc leaves it as it was, and clearing all the text deletes the markup. Confirming without changing anything leaves a Bluebeam markup untouched.
+- **Edit text:** double-click a text or callout, or select it and press F2. The text box opens with its text. Enter keeps the change, Esc leaves it as it was, and clearing all the text deletes the markup. Confirming without changing anything leaves another viewer's markup untouched.
 - **Grips:** a selected cloud shows a square on each corner, and a selected callout shows one on its arrow tip and one on its label. Drag a grip to move just that point. On a selected cloud, Ctrl+click an edge to add a corner there (it can be dragged straight away), and Ctrl+click a corner to remove it (a cloud keeps at least 3). The grips stay 8 px on screen at any zoom.
 - **Text size:** a new picker (8–24 pt) next to the line weight. It sets the size for new text and callouts, and for the selected one.
-- **Pickers show the selection:** selecting a markup sets the colour, weight and size pickers to its values. A colour the picker doesn't list (a Bluebeam red, for example) leaves the picker as it was. Each picker now changes only its own property. Before, changing the line weight also set the colour, which recoloured Bluebeam markups.
+- **Pickers show the selection:** selecting a markup sets the colour, weight and size pickers to its values. A colour the picker doesn't list (another viewer's red, for example) leaves the picker as it was. Each picker now changes only its own property. Before, changing the line weight also set the colour, which recoloured other viewers' markups.
 - **Each edit is one undo step:** a drag counts once, on mouse-up.
 - **Bugs fixed along the way:**
   - Clicking on the letters of a label didn't select it, because only the box around the text was marked as part of the markup.
@@ -155,7 +155,7 @@ Plan and prompt: [plans/10-edit-markups.md](plans/10-edit-markups.md).
   - Selecting the callout shows its two grips, and dragging the arrow-tip grip moves only the tip.
   - On a cloud from the file: dragging a corner works, Ctrl+drag on an edge adds a corner, and Ctrl+click removes it again. The file's own drawing of the cloud is hidden once it's changed.
   - Undoing all of it brought back the file as opened, with no `*`.
-- **Still to check by hand:** F2 and double-click text editing (the scripted run lost the window to another app at that point), the text size picker, and a saved edit opening in Bluebeam.
+- **Still to check by hand:** F2 and double-click text editing (the scripted run lost the window to another app at that point), the text size picker, and a saved edit opening in another viewer.
 - **Not included:** rotating, resizing text boxes, rich text, selecting more than one markup.
 
 ## Phase 11 – Modern interface (1 day)
@@ -221,16 +221,16 @@ Plan and prompt: [plans/14-vector-snap-measure.md](plans/14-vector-snap-measure.
 - **Scale:** the status bar's **Scale** button lists 1:1 to 1:2500, plus **Calibrate…**: click both ends of a known length, then type its real length in mm. Each page keeps its own scale. A measurement keeps the scale it was made at, so changing the page scale later doesn't change it.
 - **In the file:**
   - Measurements are saved as the standard PDF measurement annotation types (ISO 32000), each with a `/Measure` scale and a drawn appearance: `/Line /LineDimension` (distance), `/PolyLine /PolyLineDimension` (length) and `/Polygon /PolygonDimension` (area). Ones from other apps whose units PocketPDF knows (mm, cm, m, in, ft…) can be edited. Others are left untouched.
-  - The page scale is saved as a page viewport (`/VP`) and read from one, Bluebeam's included. A Bluebeam 1/8" = 1'-0" reads as 1:96.
+  - The page scale is saved as a page viewport (`/VP`) and read from one, other viewers' included. A 1/8" = 1'-0" from another viewer reads as 1:96.
 - **How the line work is read (`VectorExtractor`):** Docnet doesn't wrap PDFium's page-object functions, so they're called directly in the same `pdfium.dll`, under the existing PDFium lock. It walks every path, including those in nested form XObjects, multiplying their matrices. Curves are split into 8 straight pieces. Text and images are left out. It stops at 1,000,000 segments and says so.
 - **Snap index (`SnapIndex`):** a 16 pt grid of cells. A lookup tries end points first, then crossings (of at most the 150 nearest lines, so hatching can't stall it), then midpoints, then the nearest point on a line.
 - **Checked:**
   - 14 new unit tests. Lines, rectangles, curves, `cm` transforms and scaled form XObjects come out in PDF space at /Rotate 0 and 90. Each snap kind, its priority, and long diagonal lines. Scales from ratios, calibration and feet. Measurement values. Measurements and the page scale saved and read back unchanged.
   - On a real A1 sheet (30,154 segments): reading the line work 36 ms, building the index 12 ms, one snap lookup 0.02 ms (0.2 ms with the wide radius you get at 10% zoom). The targets were 1 s and 1 ms.
   - Measurements saved into a sample file show in the app as saved, with "Scale 1:50" read back in the status bar.
-- **Not checked:** clicking, snapping and calibrating in the app (no scripted input while the machine is in use), Bluebeam reading the saved measurements and scale (no Bluebeam here), and very dense sheets near the segment limit.
+- **Not checked:** clicking, snapping and calibrating in the app (no scripted input while the machine is in use), another viewer reading the saved measurements and scale (none here to try), and very dense sheets near the segment limit.
 - **Limits:**
-  - A page that already has viewports (Bluebeam's) keeps them as they are, so a scale set on it in PocketPDF isn't saved to the file. Its measurements still carry their own scale.
+  - A page that already has viewports (from another viewer) keeps them as they are, so a scale set on it in PocketPDF isn't saved to the file. Its measurements still carry their own scale.
   - Units are mm and m² only.
   - Grip drags don't snap.
 
@@ -240,13 +240,13 @@ Plan and prompt: [plans/14-vector-snap-measure.md](plans/14-vector-snap-measure.
 - Find text (Ctrl+F), using the page text from phase 12.
 - "Combine PDFs" in the short Windows 11 right-click menu: needs an `IExplorerCommand` shell extension and a signed sparse app package.
 - More markup types (line, freehand ink, rectangle, stamp).
-- Linking to IssueBuddy or Revit. Keep the markup model and the PDF read/write code free of WPF types, so they can move into a shared library when that day comes.
+- Linking to other tools. Keep the markup model and the PDF read/write code free of WPF types, so they can move into a shared library when that day comes.
 - Undo/redo, editing placed markups, a modern interface, text selection, Combine PDFs from Explorer, and vector snapping with measuring are now planned as phases 9–14. See [plans/README.md](plans/README.md): each has a plan and a ready-to-paste build prompt.
 
 ## Known risks
 | Risk | Mitigation |
 |---|---|
-| Missing `/AP` streams make markups invisible in Bluebeam or print | Write `/AP` in Phase 3; test in Bluebeam before moving on |
+| Missing `/AP` streams make markups invisible in other viewers or print | Write `/AP` in Phase 3; test in another viewer before moving on |
 | Rotated pages put markups in the wrong place | Unit-test the coordinate helper with `/Rotate` 0/90/180/270 |
 | Large A0 renders use too much memory | Cap the render size and render only the visible pages |
 | PDFium crashes if called from several threads | One renderer class with a lock |

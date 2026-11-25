@@ -489,19 +489,21 @@ public partial class MainWindow : Window
             && MessageBox.Show(this, $"{Path.GetFileName(filePath)} was changed by someone else since you opened it. Saving over it loses their changes.\n\n"
                 + "Save over it anyway? Choose No to keep their changes, then use Save As to save yours under another name.", "PocketPDF",
                 MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return false;
-        // Written beside it first, then swapped in: a failed save never leaves a half-written file in place of the drawing.
-        string tempPath = filePath + ".saving";
+        Mouse.OverrideCursor = Cursors.Wait; // a big set, or placed sheets drawn into it, takes a few seconds
         try
         {
-            MarkupFile.Save(_doc.Loaded, _doc.Loaded.MarkupsByPage, tempPath);
-            File.Move(tempPath, filePath, overwrite: true);
+            MarkupFile.Save(_doc.Loaded, _doc.Loaded.MarkupsByPage, filePath); // writes beside it and swaps it in: a failed save leaves the drawing as it was
         }
         catch (Exception ex)
         {
-            try { File.Delete(tempPath); } catch (Exception) { } // best effort: the message below is what matters
+            Mouse.OverrideCursor = null;
             MessageBox.Show(this, $"Could not save {Path.GetFileName(filePath)}.\n\n{ex.Message}", "PocketPDF",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
         }
         _doc.FilePath = filePath;
         _doc.FileTime = File.GetLastWriteTimeUtc(filePath);
@@ -2105,7 +2107,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Shows the selected markup's style in the pickers. Applying a markup's own value back to it changes nothing,
-    /// so this only updates the style for new markups. A value the picker doesn't list (a Bluebeam colour) leaves it as it is.
+    /// so this only updates the style for new markups. A value the picker doesn't list (another viewer's colour) leaves it as it is.
     /// </summary>
     void ShowSelectedMarkupStyle()
     {

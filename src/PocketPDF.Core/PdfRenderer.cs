@@ -57,7 +57,6 @@ public sealed class PdfRenderer
     {
         lock (PdfiumLock)
         {
-            _ = DocLib.Instance; // makes sure Docnet has started PDFium before calling it directly
             if (_lineWorkByPage.TryGetValue(pageIndex, out var cached)) return cached;
             return _lineWorkByPage[pageIndex] = VectorExtractor.Extract(_pdfBytes, pageIndex);
         }
@@ -68,7 +67,6 @@ public sealed class PdfRenderer
     {
         lock (PdfiumLock)
         {
-            _ = DocLib.Instance; // makes sure Docnet has started PDFium before calling it directly
             return VectorExtractor.RenderWithAndWithoutText(_pdfBytes, pageIndex, scale);
         }
     }
@@ -81,7 +79,6 @@ public sealed class PdfRenderer
     {
         lock (PdfiumLock)
         {
-            _ = DocLib.Instance; // makes sure Docnet has started PDFium before calling it directly
             int flags = includeAnnotations ? (int)RenderFlags.RenderAnnotations : 0;
             // shortcut: reopens the document for every render; keep it open if big files feel slow.
             return hairlines ? VectorExtractor.RenderHairlines(_pdfBytes, pageIndex, scale, flags) : VectorExtractor.Render(_pdfBytes, pageIndex, scale, flags);
