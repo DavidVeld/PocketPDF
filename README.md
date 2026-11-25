@@ -4,10 +4,14 @@ A small Windows PDF viewer and markup tool for engineering drawings. Open a draw
 scale, draw on it with simple CAD tools, overlay an old revision to see what changed, and save the markups back
 into the PDF as standard annotations that other viewers show too.
 
-![PocketPDF with a drawing open: clouds, callouts, hatched fills, measurements and CAD hatching on a sample sheet](img/screenshot.png)
+![PocketPDF in light mode with a drawing open: clouds, callouts, hatched fills, measurements and CAD hatching on a sample sheet](img/screenshot.png)
 
 *A made-up sample sheet with one of each kind of markup. The style of new markups is set along the top, the tools
-are down the right, and pages, snap, zoom and the drawing scale are in the status bar.*
+are down the right, and pages, snap and its settings, zoom and the drawing scale (green once set) are in the status bar.*
+
+![The same sheet in dark mode](img/screenshot-dark.png)
+
+*The same in dark mode (View ▸ Dark mode). The drawing itself stays on white paper.*
 
 ## Features
 
