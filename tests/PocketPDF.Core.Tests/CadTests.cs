@@ -93,6 +93,22 @@ public class CadTests
     }
 
     [Fact]
+    public void Shapes_inside_the_region_are_cut_out_of_it()
+    {
+        // Three circles round one centre, radii 100, 60 and 20, and a square inside the middle one.
+        static CadCircleMarkup Circle(double radius) => new() { Center = new(0, 0), Radius = radius };
+        CadMarkup[] edges = [Circle(100), Circle(60), Circle(20), Line(-50, -10, -30, -10, -30, 10, -50, 10, -50, -10)];
+        static double Disc(double radius) => Math.Abs(Area(CadGeometry.PathOf(Circle(radius))!.Value.Points));
+
+        var outerRing = CadGeometry.RegionAround(edges, new PdfPoint(80, 0))!;
+        Assert.Equal(Disc(100) - Disc(60), Area(outerRing), 3); // only the ring: the middle circle and all inside it left out
+        var middleRing = CadGeometry.RegionAround(edges, new PdfPoint(40, 0))!;
+        Assert.Equal(Disc(60) - Disc(20) - 400, Area(middleRing), 3); // the small circle and the square cut out
+        Assert.Equal(Disc(20), Area(CadGeometry.RegionAround(edges, new PdfPoint(5, 0))!), 3);
+        Assert.Equal(2, CadGeometry.HatchLines(outerRing, 10, 90).Count(line => Math.Abs(line.A.X - 0) < 1e-9)); // x = 0 crosses the ring twice
+    }
+
+    [Fact]
     public void Hatch_lines_fill_the_region_and_stay_inside_it()
     {
         List<PdfPoint> square = [new(0, 0), new(100, 0), new(100, 100), new(0, 100)];

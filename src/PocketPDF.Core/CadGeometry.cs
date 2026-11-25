@@ -230,9 +230,9 @@ public static class CadGeometry
 
     /// <summary>
     /// The smallest closed region formed by the edges that holds <paramref name="inside"/>, as a polygon; null if the
-    /// point isn't enclosed. Edges are split where they cross, so lines that overshoot still close a region.
+    /// point isn't enclosed. Edges are split where they cross, so lines that overshoot still close a region. Separate
+    /// shapes inside it (a smaller circle in a circle) are cut out, so a hatch between two rings fills only the ring.
     /// </summary>
-    // shortcut: islands (a circle inside the region) aren't cut out of it; add them as holes if hatches must skip them.
     public static List<PdfPoint>? RegionAround(IEnumerable<CadMarkup> edges, PdfPoint inside)
     {
         var segments = edges.Select(PathOf).OfType<(List<PdfPoint> Points, bool Closed)>()
@@ -276,10 +276,21 @@ public static class CadGeometry
         var outgoing = neighbours.ToDictionary(pair => pair.Key, pair => pair.Value
             .OrderBy(to => Math.Atan2(vertices[to].Y - vertices[pair.Key].Y, vertices[to].X - vertices[pair.Key].X)).ToList());
 
-        // Walk every face, turning as far right as possible at each vertex: bounded faces come out anticlockwise.
+        // Which separate shape (connected group of edges) each vertex belongs to.
+        var shapeOf = new Dictionary<int, int>();
+        foreach (int seed in neighbours.Keys)
+        {
+            if (!shapeOf.TryAdd(seed, seed)) continue;
+            var stack = new Stack<int>([seed]);
+            while (stack.TryPop(out int vertex))
+                foreach (int next in neighbours[vertex])
+                    if (shapeOf.TryAdd(next, seed)) stack.Push(next);
+        }
+
+        // Walk every face, turning as far right as possible at each vertex: bounded faces come out anticlockwise,
+        // and each shape's outline as seen from outside comes out clockwise.
         var visited = new HashSet<(int, int)>();
-        List<PdfPoint>? best = null;
-        double bestArea = double.PositiveInfinity;
+        var faces = new List<(List<PdfPoint> Points, int Shape, double Area)>();
         foreach (var (start, ends) in outgoing)
             foreach (int firstEnd in ends)
             {
@@ -293,10 +304,43 @@ public static class CadGeometry
                     int back = around.IndexOf(from);
                     (from, to) = (to, around[(back - 1 + around.Count) % around.Count]);
                 }
-                double area = SignedArea(face);
-                if (area > Epsilon && area < bestArea && Contains(face, inside)) (best, bestArea) = (face, area);
+                faces.Add((face, shapeOf[start], SignedArea(face)));
             }
-        return best;
+
+        var best = faces.Where(face => face.Area > Epsilon && Contains(face.Points, inside)).DefaultIfEmpty().MinBy(face => face.Area);
+        if (best.Points == null) return null;
+        // Islands: other shapes inside the region, cut out as holes. One inside another island already sits in its hole.
+        var islands = faces.Where(face => face.Area < -Epsilon && face.Shape != best.Shape && Contains(best.Points, face.Points[0])).ToList();
+        islands.RemoveAll(island => islands.Any(other => other.Shape != island.Shape && Contains(other.Points, island.Points[0])));
+        return WithHoles(best.Points, islands.Select(island => island.Points));
+    }
+
+    /// <summary>
+    /// One polygon for an anticlockwise outline with clockwise holes: each hole is joined to the outline by a slit there and
+    /// back, so even-odd and non-zero fills both leave it empty. Holes go rightmost first, each slit running right from the
+    /// hole to the first edge it meets, which is always one already in the polygon (the outline or a hole joined before).
+    /// </summary>
+    static List<PdfPoint> WithHoles(List<PdfPoint> outline, IEnumerable<List<PdfPoint>> holes)
+    {
+        var polygon = outline.ToList();
+        foreach (var hole in holes.OrderByDescending(hole => hole.Max(point => point.X)))
+        {
+            int start = hole.IndexOf(hole.MaxBy(point => point.X));
+            var from = hole[start];
+            int edge = -1;
+            double hitX = double.PositiveInfinity;
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                var (a, b) = (polygon[i], polygon[(i + 1) % polygon.Count]);
+                if ((a.Y <= from.Y) == (b.Y <= from.Y)) continue;
+                double x = a.X + (from.Y - a.Y) / (b.Y - a.Y) * (b.X - a.X);
+                if (x >= from.X && x < hitX) (edge, hitX) = (i, x);
+            }
+            if (edge < 0) continue; // not inside after all: leave it filled rather than break the outline
+            var hit = new PdfPoint(hitX, from.Y);
+            polygon.InsertRange(edge + 1, [hit, .. hole.Skip(start), .. hole.Take(start), from, hit]);
+        }
+        return polygon;
     }
 
     /// <summary>The lines a hatch is drawn with: one set for lines, a second set square to it for a crosshatch, none for solid.</summary>
