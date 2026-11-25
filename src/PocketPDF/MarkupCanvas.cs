@@ -1508,15 +1508,15 @@ public sealed class MarkupCanvas : Canvas
 
     static Cursor CreatePickboxCursor()
     {
-        const int Size = 32, Middle = 16, Half = 5;
+        const int Size = 32, Middle = 16, Half = 2;
         var pixels = new byte[Size * Size * 4]; // BGRA, bottom row first as a .cur keeps them
         for (int y = Middle - Half - 1; y <= Middle + Half + 1; y++)
             for (int x = Middle - Half - 1; x <= Middle + Half + 1; x++)
             {
                 int ring = Math.Max(Math.Abs(x - Middle), Math.Abs(y - Middle));
-                if (ring < Half - 1) continue;
+                if (ring < Half) continue; // open inside, so the line picked shows through
                 int at = ((Size - 1 - y) * Size + x) * 4;
-                byte shade = ring == Half ? (byte)0 : (byte)255; // black, edged in white inside and out so it shows on dark lines too
+                byte shade = ring == Half ? (byte)0 : (byte)255; // black, edged in white outside so it shows on dark lines too
                 (pixels[at], pixels[at + 1], pixels[at + 2], pixels[at + 3]) = (shade, shade, shade, 255);
             }
         using var file = new System.IO.MemoryStream();
