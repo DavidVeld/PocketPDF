@@ -20,14 +20,26 @@ public static class VectorExtractor
     const int TextObject = 1, PathObject = 2, FormObject = 5;
     const int LineTo = 0, BezierTo = 1, MoveTo = 2;
 
-    internal static List<LineSegment> Extract(byte[] pdfBytes, int pageIndex) => WithPage(pdfBytes, pageIndex, page =>
+    /// <summary>The page's line work, and the centres of the circles in it (closed paths of curves only, round to within 2%).</summary>
+    internal static (List<LineSegment> Segments, List<PdfPoint> CircleCenters) Extract(byte[] pdfBytes, int pageIndex) => WithPage(pdfBytes, pageIndex, page =>
     {
-        var segments = new List<LineSegment>();
+        var (segments, centers) = (new List<LineSegment>(), new List<PdfPoint>());
         int count = Native.FPDFPage_CountObjects(page);
         for (int i = 0; i < count && segments.Count < MaxSegments; i++)
-            AddObject(Native.FPDFPage_GetObject(page, i), Matrix.Identity, segments);
-        return segments;
+            AddObject(Native.FPDFPage_GetObject(page, i), Matrix.Identity, segments, centers);
+        return (segments, centers);
     });
+
+    /// <summary>The centre of a closed outline if it is a circle: every point within 2% of the same distance from the middle.</summary>
+    internal static PdfPoint? CircleCenter(IReadOnlyList<PdfPoint> outline)
+    {
+        if (outline.Count < 8 || Math.Abs(outline[0].X - outline[^1].X) + Math.Abs(outline[0].Y - outline[^1].Y) > 0.01) return null;
+        var points = outline.Take(outline.Count - 1).ToList(); // the last one is the first again
+        var center = new PdfPoint(points.Average(point => point.X), points.Average(point => point.Y));
+        var radii = points.Select(point => Math.Sqrt(Math.Pow(point.X - center.X, 2) + Math.Pow(point.Y - center.Y, 2))).ToList();
+        double radius = radii.Average();
+        return radius > 0.5 && radii.All(r => Math.Abs(r - radius) <= 0.02 * radius) ? center : null;
+    }
 
     /// <summary>
     /// Renders a page like Docnet does, but with every line drawn one pixel wide ("line weights off"). Only PDFium's
@@ -166,7 +178,7 @@ public static class VectorExtractor
     }
 
     /// <summary>Adds a path's segments, or a form's contents, mapped through <paramref name="outer"/> (the matrices of the forms around it).</summary>
-    static void AddObject(IntPtr pageObject, Matrix outer, List<LineSegment> segments)
+    static void AddObject(IntPtr pageObject, Matrix outer, List<LineSegment> segments, List<PdfPoint> centers)
     {
         int type = Native.FPDFPageObj_GetType(pageObject);
         if (type is not (PathObject or FormObject)) return;
@@ -176,11 +188,18 @@ public static class VectorExtractor
         {
             int count = Native.FPDFFormObj_CountObjects(pageObject);
             for (int i = 0; i < count && segments.Count < MaxSegments; i++)
-                AddObject(Native.FPDFFormObj_GetObject(pageObject, (uint)i), matrix, segments);
+                AddObject(Native.FPDFFormObj_GetObject(pageObject, (uint)i), matrix, segments, centers);
             return;
         }
 
         PdfPoint? current = null, subpathStart = null;
+        var outline = new List<PdfPoint>(); // the subpath's points while it is all curves: a circle has a centre to snap to
+        bool onlyCurves = true;
+        void EndSubpath()
+        {
+            if (onlyCurves && CircleCenter(outline) is { } center) centers.Add(center);
+            (onlyCurves, outline) = (true, []);
+        }
         int segmentCount = Native.FPDFPath_CountSegments(pageObject);
         for (int i = 0; i < segmentCount && segments.Count < MaxSegments; i++)
         {
@@ -189,18 +208,21 @@ public static class VectorExtractor
             switch (Native.FPDFPathSegment_GetType(segment))
             {
                 case MoveTo:
+                    EndSubpath();
                     current = subpathStart = point;
+                    outline.Add(point);
                     break;
                 case LineTo when current is { } from:
                     Add(segments, from, point);
                     current = point;
+                    onlyCurves = false;
                     break;
                 case BezierTo when current is { } from && i + 2 < segmentCount:
                     // A curve is three segments in a row: two control points, then the end point.
                     var control2 = PointOf(Native.FPDFPath_GetPathSegment(pageObject, i + 1), matrix);
                     segment = Native.FPDFPath_GetPathSegment(pageObject, i + 2);
                     var end = PointOf(segment, matrix);
-                    AddBezier(segments, from, point, control2, end);
+                    AddBezier(segments, from, point, control2, end, outline);
                     current = end;
                     i += 2;
                     break;
@@ -211,6 +233,7 @@ public static class VectorExtractor
                 current = first;
             }
         }
+        EndSubpath();
     }
 
     static PdfPoint PointOf(IntPtr segment, Matrix matrix)
@@ -219,7 +242,7 @@ public static class VectorExtractor
         return matrix.Apply(x, y);
     }
 
-    static void AddBezier(List<LineSegment> segments, PdfPoint start, PdfPoint control1, PdfPoint control2, PdfPoint end)
+    static void AddBezier(List<LineSegment> segments, PdfPoint start, PdfPoint control1, PdfPoint control2, PdfPoint end, List<PdfPoint> outline)
     {
         var previous = start;
         for (int piece = 1; piece <= BezierPieces; piece++)
@@ -230,6 +253,7 @@ public static class VectorExtractor
                 a * start.X + b * control1.X + c * control2.X + d * end.X,
                 a * start.Y + b * control1.Y + c * control2.Y + d * end.Y);
             Add(segments, previous, next);
+            outline.Add(next);
             previous = next;
         }
     }

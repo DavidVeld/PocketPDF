@@ -370,6 +370,7 @@ public partial class MainWindow : Window
     {
         PagesToggle.IsChecked = _settings.PagesPanelOpen;
         SnapToggle.IsChecked = MarkupLayer.SnapEnabled = _settings.Snap;
+        MarkupLayer.SnapKinds = Enum.GetValues<SnapKind>().Where(kind => !_settings.SnapsOff.Contains(kind.ToString())).ToHashSet();
         LineWeightsMenuItem.IsChecked = _settings.LineWeights;
         DarkModeMenuItem.IsChecked = _settings.DarkMode ?? App.WindowsUsesDarkMode();
         SelectByTag(ShapePicker, tag => tag == _settings.AreaShape);
@@ -412,6 +413,29 @@ public partial class MainWindow : Window
     }
 
     void OnSnapToggled(object sender, RoutedEventArgs e) => MarkupLayer.SnapEnabled = SnapToggle.IsChecked == true;
+
+    /// <summary>A menu of what points snap to, each ticked on or off; it stays open so several can be changed.</summary>
+    void OnSnapSettings(object sender, RoutedEventArgs e)
+    {
+        var menu = new ContextMenu { PlacementTarget = SnapSettingsButton, Placement = System.Windows.Controls.Primitives.PlacementMode.Top };
+        foreach (var (kind, header) in new[]
+        {
+            (SnapKind.Endpoint, "_End points"), (SnapKind.Intersection, "_Intersections"), (SnapKind.Center, "_Centres of circles"),
+            (SnapKind.Midpoint, "_Midpoints"), (SnapKind.Perpendicular, "_Perpendicular (square off the last point)"), (SnapKind.Nearest, "_Nearest point on a line"),
+        })
+        {
+            var item = new MenuItem { Header = header, IsCheckable = true, IsChecked = MarkupLayer.SnapKinds.Contains(kind), StaysOpenOnClick = true };
+            item.Click += (_, _) =>
+            {
+                var kinds = MarkupLayer.SnapKinds.ToHashSet();
+                if (item.IsChecked) kinds.Add(kind); else kinds.Remove(kind);
+                MarkupLayer.SnapKinds = kinds;
+                _settings.SnapsOff = [.. Enum.GetValues<SnapKind>().Except(kinds).Select(off => off.ToString())];
+            };
+            menu.Items.Add(item);
+        }
+        menu.IsOpen = true;
+    }
 
     void OnHelpMenuOpened(object sender, RoutedEventArgs e) =>
         ExplorerMenuItem.Header = ExplorerMenu.InstalledCommand() != null
@@ -750,7 +774,8 @@ public partial class MainWindow : Window
         Mouse.OverrideCursor = Cursors.AppStarting;
         try
         {
-            snaps = await Task.Run(() => new SnapIndex(pdf.GetLineWork(pageIndex).Select(segment => (page.ToView(segment.A), page.ToView(segment.B)))));
+            snaps = await Task.Run(() => new SnapIndex(
+                pdf.GetLineWork(pageIndex).Select(segment => (page.ToView(segment.A), page.ToView(segment.B))), pdf.GetCircleCenters(pageIndex).Select(page.ToView)));
         }
         catch (Exception ex)
         {

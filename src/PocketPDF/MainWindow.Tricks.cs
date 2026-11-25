@@ -30,7 +30,7 @@ public partial class MainWindow
                 + "Copy markups in one tab and paste them in another: Ctrl+Shift+V puts them on the same spot of the sheet."),
             (ToolsBar, "Drawing tools",
                 "One at a time, each with a key: V select, S select text, T text, C callout, G tag, K cloud, P pen, H highlight, L line, R rectangle, M measure. "
-                + "Shift keeps lines straight; Ctrl does the opposite of Snap. The CAD tools below come on once the sheet has a scale."),
+                + "Shift keeps lines straight; Ctrl places a point without snapping. The CAD tools below come on once the sheet has a scale."),
             (PagePanel, "Pages", "Click a page to show it. Page Up and Page Down step through them."),
             (StatusBar, "Status bar",
                 "Show or hide the page list, snap to the drawing's line ends and crossings, turn the page, the page (arrows to step, or type a number), "

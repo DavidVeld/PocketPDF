@@ -1109,8 +1109,11 @@ public sealed class MarkupCanvas : Canvas
         || (Tool == MarkupTool.CadDimension && _cadPoints.Count < 2) // the third click places the dimension line freely
         || _picks != null;
 
-    /// <summary>Whether points snap to the drawing. Holding Ctrl while clicking does the opposite.</summary>
+    /// <summary>Whether points snap to the drawing. Holding Ctrl turns snapping off while it is held.</summary>
     public bool SnapEnabled { get; set; } = true;
+
+    /// <summary>What points snap to, as picked next to the Snap box.</summary>
+    public IReadOnlySet<SnapKind> SnapKinds { get; set; } = Enum.GetValues<SnapKind>().ToHashSet();
 
     /// <summary>The page's scale, as real mm per point, for new measurements.</summary>
     public double MmPerPoint { get; set; } = DrawingScale.PaperMmPerPoint;
@@ -1152,8 +1155,8 @@ public sealed class MarkupCanvas : Canvas
 
     /// <summary>
     /// Where a point lands: Shift (or Ctrl with the CAD tools) locks it horizontal or vertical from
-    /// <paramref name="from"/>; otherwise Ctrl flips <see cref="SnapEnabled"/>, and it snaps to the drawing's line work
-    /// within reach, and to the markups' edges, corners and circles. A CAD line that snaps to nothing and runs within
+    /// <paramref name="from"/>; otherwise, unless Ctrl is held or Snap is off, it snaps to the drawing's line work within
+    /// reach (the <see cref="SnapKinds"/> picked, square off <paramref name="from"/> too), and to the markups' edges, corners and circles. A CAD line that snaps to nothing and runs within
     /// a few degrees of horizontal or vertical is pulled straight.
     /// </summary>
     ViewPoint Snapped(ViewPoint point, ViewPoint? from)
@@ -1197,11 +1200,12 @@ public sealed class MarkupCanvas : Canvas
             return CadGeometry.RoundedCorner(corner, point, DrawingScale.RoundingStepMm(MmPerPoint) / MmPerPoint); // whole mm, or tens
         if ((modifiers.HasFlag(ModifierKeys.Shift) || (ortho && modifiers.HasFlag(ModifierKeys.Control))) && from is { } origin)
             return Math.Abs(point.X - origin.X) >= Math.Abs(point.Y - origin.Y) ? new(point.X, origin.Y) : new(origin.X, point.Y);
-        if (SnapEnabled == (!cad && modifiers.HasFlag(ModifierKeys.Control))) return point;
-        var onDrawing = (_pickSnaps ?? _snaps)?.Snap(point, SnapRadius);
+        if (!SnapEnabled || modifiers.HasFlag(ModifierKeys.Control)) return point;
+        var onDrawing = (_pickSnaps ?? _snaps)?.Snap(point, SnapRadius, from, SnapKinds);
         // shortcut: the markups' snap index is rebuilt on every move; cache it if pages with thousands of markups lag.
         var onMarkups = _page != null && _pickSnaps == null
-            ? new SnapIndex(VisibleMarkups.SelectMany(markup => Dimensioning.SnapSegments(markup, _page))).Snap(point, SnapRadius)
+            ? new SnapIndex(VisibleMarkups.SelectMany(markup => Dimensioning.SnapSegments(markup, _page)),
+                VisibleMarkups.Select(markup => Dimensioning.SnapCenter(markup, _page)).OfType<ViewPoint>()).Snap(point, SnapRadius, from, SnapKinds)
             : null;
         _snapMarker = onMarkups is { } m && (onDrawing is not { } d || m.Kind <= d.Kind) ? onMarkups : onDrawing;
         return _snapMarker?.Point ?? point;
@@ -2171,6 +2175,8 @@ public sealed class MarkupCanvas : Canvas
             SnapKind.Endpoint => [new(x - half, y - half), new(x + half, y - half), new(x + half, y + half), new(x - half, y + half), new(x - half, y - half)],
             SnapKind.Intersection => [new(x - half, y - half), new(x + half, y + half), new(x, y), new(x + half, y - half), new(x - half, y + half)],
             SnapKind.Midpoint => [new(x - half, y + half), new(x, y - half), new(x + half, y + half), new(x - half, y + half)],
+            SnapKind.Center => [.. Enumerable.Range(0, 17).Select(i => new Point(x + half * Math.Cos(i * Math.PI / 8), y + half * Math.Sin(i * Math.PI / 8)))],
+            SnapKind.Perpendicular => [new(x - half, y - half), new(x - half, y + half), new(x + half, y + half), new(x, y + half), new(x, y), new(x - half, y)], // ⊾
             _ => [new(x - half, y - half), new(x + half, y - half), new(x - half, y + half), new(x + half, y + half), new(x - half, y - half)],
         };
         var symbol = new Polyline { Stroke = SnapBrush, StrokeThickness = 2 / _screenUnitsPerPoint, IsHitTestVisible = false };

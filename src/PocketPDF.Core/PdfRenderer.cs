@@ -13,7 +13,7 @@ public sealed class PdfRenderer
 
     readonly byte[] _pdfBytes;
     readonly Dictionary<int, PageText> _textByPage = []; // guarded by PdfiumLock
-    readonly Dictionary<int, List<LineSegment>> _lineWorkByPage = []; // guarded by PdfiumLock
+    readonly Dictionary<int, (List<LineSegment> Segments, List<PdfPoint> CircleCenters)> _lineWorkByPage = []; // guarded by PdfiumLock
 
     public int PageCount { get; }
 
@@ -53,7 +53,12 @@ public sealed class PdfRenderer
     }
 
     /// <summary>The page's line work in PDF space, for snapping. Read once per page; empty for a scan.</summary>
-    public IReadOnlyList<LineSegment> GetLineWork(int pageIndex)
+    public IReadOnlyList<LineSegment> GetLineWork(int pageIndex) => LineWork(pageIndex).Segments;
+
+    /// <summary>The centres of the circles in the page's line work, in PDF space, for snapping.</summary>
+    public IReadOnlyList<PdfPoint> GetCircleCenters(int pageIndex) => LineWork(pageIndex).CircleCenters;
+
+    (List<LineSegment> Segments, List<PdfPoint> CircleCenters) LineWork(int pageIndex)
     {
         lock (PdfiumLock)
         {

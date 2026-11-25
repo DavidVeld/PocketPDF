@@ -1,6 +1,7 @@
 namespace PocketPDF.Core;
 
-public enum SnapKind { Endpoint, Intersection, Midpoint, Nearest }
+/// <summary>What a snap lands on, in the order they win when several are in reach.</summary>
+public enum SnapKind { Endpoint, Intersection, Center, Midpoint, Perpendicular, Nearest }
 
 public readonly record struct SnapPoint(ViewPoint Point, SnapKind Kind);
 
@@ -14,11 +15,14 @@ public sealed class SnapIndex
     const int MaxIntersectionCandidates = 150; // hatching can put hundreds of lines near the cursor; pairs grow with the square
 
     readonly (ViewPoint A, ViewPoint B)[] _segments;
+    readonly ViewPoint[] _centers;
     readonly Dictionary<(int X, int Y), List<int>> _cells = [];
 
-    public SnapIndex(IEnumerable<(ViewPoint A, ViewPoint B)> segments)
+    /// <param name="centers">Centres of circles, which snap from inside the circle too, away from any line.</param>
+    public SnapIndex(IEnumerable<(ViewPoint A, ViewPoint B)> segments, IEnumerable<ViewPoint>? centers = null)
     {
         _segments = segments.ToArray();
+        _centers = centers?.ToArray() ?? [];
         for (int i = 0; i < _segments.Length; i++)
         {
             // Visit the cells along the segment in half-cell steps. A cell it only clips at a corner can be missed,
@@ -40,28 +44,51 @@ public sealed class SnapIndex
 
     public int Count => _segments.Length;
 
-    /// <summary>The best point to snap to within <paramref name="radius"/>: an end point, then an intersection, a midpoint, or else the nearest point on a line.</summary>
-    public SnapPoint? Snap(ViewPoint point, double radius)
+    /// <summary>
+    /// The best point to snap to within <paramref name="radius"/>, of the <paramref name="kinds"/> asked (all when null), in
+    /// <see cref="SnapKind"/> order: an end point, an intersection, a circle's centre, a midpoint, the foot of the
+    /// perpendicular from <paramref name="from"/> (the point placed before), or else the nearest point on a line.
+    /// </summary>
+    public SnapPoint? Snap(ViewPoint point, double radius, ViewPoint? from = null, IReadOnlySet<SnapKind>? kinds = null)
     {
+        bool On(SnapKind kind) => kinds?.Contains(kind) ?? true;
         var near = NearbySegments(point, radius).ToList();
-        if (near.Count == 0) return null;
 
-        if (Closest(near.SelectMany(i => new[] { _segments[i].A, _segments[i].B }), point, radius) is { } end) return new(end, SnapKind.Endpoint);
+        if (On(SnapKind.Endpoint) && Closest(near.SelectMany(i => new[] { _segments[i].A, _segments[i].B }), point, radius) is { } end) return new(end, SnapKind.Endpoint);
 
-        var crossings = new List<ViewPoint>();
-        var candidates = near.Count > MaxIntersectionCandidates
-            ? near.OrderBy(i => DistanceToSegment(point, _segments[i]).Distance).Take(MaxIntersectionCandidates).ToList()
-            : near;
-        for (int i = 0; i < candidates.Count; i++)
-            for (int j = i + 1; j < candidates.Count; j++)
-                if (Intersection(_segments[candidates[i]], _segments[candidates[j]]) is { } crossing) crossings.Add(crossing);
-        if (Closest(crossings, point, radius) is { } intersection) return new(intersection, SnapKind.Intersection);
+        if (On(SnapKind.Intersection))
+        {
+            var crossings = new List<ViewPoint>();
+            var candidates = near.Count > MaxIntersectionCandidates
+                ? near.OrderBy(i => DistanceToSegment(point, _segments[i]).Distance).Take(MaxIntersectionCandidates).ToList()
+                : near;
+            for (int i = 0; i < candidates.Count; i++)
+                for (int j = i + 1; j < candidates.Count; j++)
+                    if (Intersection(_segments[candidates[i]], _segments[candidates[j]]) is { } crossing) crossings.Add(crossing);
+            if (Closest(crossings, point, radius) is { } intersection) return new(intersection, SnapKind.Intersection);
+        }
+
+        if (On(SnapKind.Center) && Closest(_centers, point, radius) is { } center) return new(center, SnapKind.Center);
 
         var middles = near.Select(i => new ViewPoint((_segments[i].A.X + _segments[i].B.X) / 2, (_segments[i].A.Y + _segments[i].B.Y) / 2));
-        if (Closest(middles, point, radius) is { } middle) return new(middle, SnapKind.Midpoint);
+        if (On(SnapKind.Midpoint) && Closest(middles, point, radius) is { } middle) return new(middle, SnapKind.Midpoint);
 
+        if (On(SnapKind.Perpendicular) && from is { } origin
+            && Closest(near.Select(i => PerpendicularFoot(origin, _segments[i])).OfType<ViewPoint>(), point, radius) is { } foot)
+            return new(foot, SnapKind.Perpendicular);
+
+        if (!On(SnapKind.Nearest) || near.Count == 0) return null;
         var nearest = near.Select(i => DistanceToSegment(point, _segments[i])).MinBy(found => found.Distance);
         return new(nearest.Point, SnapKind.Nearest);
+    }
+
+    /// <summary>Where a line from <paramref name="from"/> meets the segment square on, if that falls on the segment.</summary>
+    static ViewPoint? PerpendicularFoot(ViewPoint from, (ViewPoint A, ViewPoint B) segment)
+    {
+        double dx = segment.B.X - segment.A.X, dy = segment.B.Y - segment.A.Y, lengthSquared = dx * dx + dy * dy;
+        if (lengthSquared < 1e-9) return null;
+        double t = ((from.X - segment.A.X) * dx + (from.Y - segment.A.Y) * dy) / lengthSquared;
+        return t is < 0 or > 1 ? null : new ViewPoint(segment.A.X + t * dx, segment.A.Y + t * dy);
     }
 
     /// <summary>How far off a line another piece may sit and still count as the same line, in view points.</summary>

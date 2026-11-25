@@ -50,6 +50,19 @@ public class LineWorkTests
     }
 
     [Fact]
+    public void Circles_give_their_centre_and_other_curves_none()
+    {
+        // A circle of radius 20 round (330, 230) as four quarter curves, and a squashed one (an ellipse) round (60, 230).
+        const string circles = "350 230 m 350 241.046 341.046 250 330 250 c 318.954 250 310 241.046 310 230 c "
+            + "310 218.954 318.954 210 330 210 c 341.046 210 350 218.954 350 230 c h S\n"
+            + "q 2 0 0 1 0 0 cm 40 230 m 40 241.046 31.046 250 20 250 c 8.954 250 0 241.046 0 230 c "
+            + "0 218.954 8.954 210 20 210 c 31.046 210 40 218.954 40 230 c h S Q\n";
+        using var pdf = TestPdf.CreateWithLineWork(extra: circles);
+        var center = Assert.Single(new PdfRenderer(File.ReadAllBytes(pdf.FilePath)).GetCircleCenters(0)); // the open curve and the ellipse give none
+        Assert.True(Near(center, 330, 230), $"{center}");
+    }
+
+    [Fact]
     public void A_page_without_line_work_has_none()
     {
         using var pdf = TestPdf.CreateWithText();

@@ -18,8 +18,9 @@ are down the right, and pages, snap, zoom and the drawing scale are in the statu
 - **Measuring**: set the sheet's scale (pick 1:50, 1:100… or calibrate on a known length), or let the Measure tool
   take it from the sheet: with no scale set, it uses the "1:###" written furthest bottom right (NTS is skipped). Then measure
   distances, lengths and areas. Measurements are temporary: they go when you press Esc or pick another tool (use
-  the CAD dimension tool for dimensions that stay on the sheet). Points snap to the drawing's line ends, crossings and midpoints, and to the
-  corners, edges, circle centres and quarter points of the markups and CAD lines drawn on it.
+  the CAD dimension tool for dimensions that stay on the sheet). Points snap to the drawing's line ends, crossings, circle centres and midpoints,
+  square off the last point placed (perpendicular), and to the corners, edges, circle centres and quarter points of the
+  markups and CAD lines drawn on it. The button next to Snap in the status bar picks which of these are on.
 - **Check text overlaps**: clouds every piece of text on the page that lines, arrows or fills run through.
 - **Placed sheets**: put a page of another PDF, or an image, on the drawing, such as the architect's plan over the
   structure. Its white paper is see-through; set its opacity, draw it all in one colour, clip it to a rectangle, and
@@ -99,7 +100,7 @@ The bar along the top sets how new markups look. With markups selected, it chang
 | CAD tools | The CAD tools and Join |
 | Help | Show me the tricks, add or remove *Combine PDFs* in the Explorer menu, Check for updates, About |
 
-The status bar has the page list switch, Snap, rotate page, page buttons, fit and zoom, the cursor position in
+The status bar has the page list switch, Snap and its settings, rotate page, page buttons, fit and zoom, the cursor position in
 real millimetres, and the drawing scale (click it to pick or calibrate one).
 
 ## Build and run
@@ -142,7 +143,7 @@ At startup PocketPDF asks GitHub for the latest release and, when it is newer, o
 Each tool has a key: see [Tools](#tools).
 
 While drawing: **Shift** keeps lines straight across or up (CAD tools: steps of 0, 30, 45, 60, 90°),
-**Ctrl** does the opposite of the Snap box, **Esc** cancels, and again goes back to the select arrow. With a CAD tool on, just type a size: it goes into
+**Ctrl** places the point without snapping (CAD lines: straight across or up), **Esc** cancels, and again goes back to the select arrow. With a CAD tool on, just type a size: it goes into
 the boxes in the status bar, and Enter applies it.
 
 ### Commands

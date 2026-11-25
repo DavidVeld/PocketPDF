@@ -34,6 +34,29 @@ public class SnapAndScaleTests
     }
 
     [Fact]
+    public void Square_off_the_last_point_onto_a_line()
+    {
+        // From (230, 10) square onto the line along y 50 lands at (230, 50), ahead of the nearest point under the cursor.
+        Assert.Equal(new SnapPoint(new(230, 50), SnapKind.Perpendicular), Drawing.Snap(new(226, 53), radius: 8, from: new(230, 10)));
+        Assert.Equal(SnapKind.Nearest, Drawing.Snap(new(226, 53), radius: 8)?.Kind); // nothing placed before
+    }
+
+    [Fact]
+    public void A_circle_centre_snaps_away_from_any_line()
+    {
+        var index = new SnapIndex([(new ViewPoint(0, 0), new ViewPoint(10, 0))], [new ViewPoint(400, 400)]);
+        Assert.Equal(new SnapPoint(new(400, 400), SnapKind.Center), index.Snap(new(404, 397), radius: 8));
+    }
+
+    [Fact]
+    public void Snaps_switched_off_are_skipped()
+    {
+        var noEnds = Enum.GetValues<SnapKind>().Where(kind => kind != SnapKind.Endpoint).ToHashSet();
+        Assert.Equal(SnapKind.Nearest, Drawing.Snap(new(147, 103), radius: 8, kinds: noEnds)?.Kind); // the end at (150, 100) is off
+        Assert.Null(Drawing.Snap(new(225, 55), radius: 8, kinds: new HashSet<SnapKind>()));
+    }
+
+    [Fact]
     public void Nothing_near_means_no_snap()
     {
         Assert.Null(Drawing.Snap(new(250, 80), radius: 8));

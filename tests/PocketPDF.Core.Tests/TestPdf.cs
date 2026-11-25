@@ -118,7 +118,8 @@ sealed class TestPdf : IDisposable
     /// to (250,200); a line (0,0)-(0,50) moved by "cm" to x 300; and a form XObject scaled 2x and moved to (100,100)
     /// holding a line (0,0)-(10,0), so it lands at (100,100)-(120,100).
     /// </summary>
-    public static TestPdf CreateWithLineWork(int rotation = 0)
+    /// <param name="extra">More content to draw after the standard line work.</param>
+    public static TestPdf CreateWithLineWork(int rotation = 0, string extra = "")
     {
         var testPdf = new TestPdf();
         using var document = new PdfDocument();
@@ -135,8 +136,8 @@ sealed class TestPdf : IDisposable
         document.Internals.AddObject(form);
         page.Resources.Elements["/XObject"] = new PdfDictionary(document) { Elements = { ["/Fm1"] = form.Reference! } };
 
-        const string drawing = "0 0 0 RG 1 w\n10 20 m 110 20 l S\n50 50 20 30 re S\n200 200 m 200 250 250 250 250 200 c S\n"
-            + "q 1 0 0 1 300 0 cm 0 0 m 0 50 l S Q\n/Fm1 Do\n";
+        string drawing = "0 0 0 RG 1 w\n10 20 m 110 20 l S\n50 50 20 30 re S\n200 200 m 200 250 250 250 250 200 c S\n"
+            + "q 1 0 0 1 300 0 cm 0 0 m 0 50 l S Q\n/Fm1 Do\n" + extra;
         page.Contents.AppendContent().CreateStream(System.Text.Encoding.ASCII.GetBytes(drawing));
 
         document.Save(testPdf.FilePath);

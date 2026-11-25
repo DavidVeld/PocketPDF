@@ -19,8 +19,9 @@ public static class Dimensioning
     const double OnTolerance = 0.05;
 
     /// <summary>
-    /// The lines a markup offers to snap to, in view space: its edges, or a circle's centre and quarter points as
-    /// points (its outline is many short pieces, whose corners would snap everywhere). Text, ink and measurements offer none.
+    /// The lines a markup offers to snap to, in view space: its edges, or a circle's quarter points as points (its
+    /// outline is many short pieces, whose corners would snap everywhere). A circle's centre comes from <see cref="SnapCenter"/>.
+    /// Text, ink and measurements offer none.
     /// </summary>
     public static IEnumerable<(ViewPoint A, ViewPoint B)> SnapSegments(Markup markup, PageGeometry page)
     {
@@ -43,8 +44,17 @@ public static class Dimensioning
         };
     }
 
+    /// <summary>The centre of a circle markup (or a circular cloud), in view space; null for any other markup.</summary>
+    public static ViewPoint? SnapCenter(Markup markup, PageGeometry page) => markup switch
+    {
+        CadCircleMarkup circle => page.ToView(circle.Center),
+        CloudMarkup { Shape: AreaShape.Circle } ellipse when ViewRect.Around(ellipse.Vertices.Select(page.ToView)) is var box =>
+            new ViewPoint((box.Left + box.Right) / 2, (box.Top + box.Bottom) / 2),
+        _ => null,
+    };
+
     static IEnumerable<(ViewPoint, ViewPoint)> CircleSnaps(ViewPoint center, double radiusX, double radiusY) =>
-        new ViewPoint[] { center, new(center.X + radiusX, center.Y), new(center.X - radiusX, center.Y), new(center.X, center.Y + radiusY), new(center.X, center.Y - radiusY) }
+        new ViewPoint[] { new(center.X + radiusX, center.Y), new(center.X - radiusX, center.Y), new(center.X, center.Y + radiusY), new(center.X, center.Y - radiusY) }
             .Select(point => (point, point));
 
     /// <summary>Whether <paramref name="point"/> sits on the markup: on an edge, a circle's outline or centre, or a snap point.</summary>
@@ -53,6 +63,7 @@ public static class Dimensioning
         if (markup is CadCircleMarkup circle)
             return Math.Abs(CadGeometry.Distance(circle.Center, point) - circle.Radius) <= OnTolerance || CadGeometry.Distance(circle.Center, point) <= OnTolerance;
         var onView = page.ToView(point);
+        if (SnapCenter(markup, page) is { } center && CloudGeometry.Distance(center, onView) <= OnTolerance) return true;
         return SnapSegments(markup, page).Any(segment =>
             CloudGeometry.Distance(onView, CloudGeometry.NearestPointOnEdges([segment.A, segment.B], onView).Point) <= OnTolerance);
     }

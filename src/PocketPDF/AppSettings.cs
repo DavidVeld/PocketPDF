@@ -20,6 +20,8 @@ public sealed class AppSettings
     public bool Maximized { get; set; }
     public bool PagesPanelOpen { get; set; } = true;
     public bool Snap { get; set; } = true;
+    /// <summary>The snaps switched off next to the Snap box, by name, so snaps added later start on.</summary>
+    public List<string> SnapsOff { get; set; } = [];
     /// <summary>False shows the drawing's lines one pixel wide.</summary>
     public bool LineWeights { get; set; } = true;
     /// <summary>Shape and outline of new callouts and clouds, as the pickers' tags.</summary>
