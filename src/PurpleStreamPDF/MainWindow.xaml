@@ -145,6 +145,10 @@
                 <MenuItem Header="Select _all" InputGestureText="Ctrl+A" Click="OnSelectAll" ToolTip="All markups on this page; again for all markups in the document">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8B3;" /></MenuItem.Icon>
                 </MenuItem>
+                <Separator />
+                <MenuItem Header="Pr_operties" InputGestureText="Alt+Enter" Click="OnMarkupProperties" ToolTip="Who drew the selected markup and when, and who last changed it">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE946;" /></MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem x:Name="LineWeightsMenuItem" Header="Line _weights" IsCheckable="True" IsChecked="True" Click="OnLineWeightsToggled"
@@ -227,8 +231,9 @@
                           ToolTip="Overlay an old revision of this drawing: old in red, new in blue, unchanged in black">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8C8;" /></MenuItem.Icon>
                 </MenuItem>
-                <Separator />
-                <MenuItem Header="Save tool as te_mplate…" Click="OnSaveTemplate" ToolTip="Save the tool in use and its style under a name, as a button on the tool bar">
+                <!-- Tool templates are hidden for now: drop the Visibility here and on the tool bar to bring them back. -->
+                <Separator Visibility="Collapsed" />
+                <MenuItem Header="Save tool as te_mplate…" Click="OnSaveTemplate" Visibility="Collapsed" ToolTip="Save the tool in use and its style under a name, as a button on the tool bar">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE710;" /></MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
@@ -419,9 +424,9 @@
                 </ComboBoxItem>
             </ComboBox>
             <Separator />
-            <!-- Tool templates: the code puts a button here for each one. -->
-            <StackPanel x:Name="TemplateBar" Orientation="Horizontal" />
-            <Button Click="OnSaveTemplate" ToolTip="Save the tool in use and its style as a template, under a name. Markups drawn with it carry the name as their subject, for whoever (or whatever) reads the file">
+            <!-- Tool templates: the code puts a button here for each one. Hidden for now. -->
+            <StackPanel x:Name="TemplateBar" Orientation="Horizontal" Visibility="Collapsed" />
+            <Button Click="OnSaveTemplate" Visibility="Collapsed" ToolTip="Save the tool in use and its style as a template, under a name. Markups drawn with it carry the name as their subject, for whoever (or whatever) reads the file">
                 <TextBlock Style="{StaticResource ToolIcon}" Text="&#xE710;" />
             </Button>
         </ToolBar>

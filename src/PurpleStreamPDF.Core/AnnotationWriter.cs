@@ -22,6 +22,9 @@ static class AnnotationWriter
     /// <summary>The font family of a markup's text, when not the default Helvetica.</summary>
     internal const string FontKey = "/PocketPDFFont";
 
+    /// <summary>Who last changed a markup; the standard /M only says when.</summary>
+    internal const string ModifiedByKey = "/PocketPDFModifiedBy";
+
     /// <summary>A patterned fill: its /Color and /Pattern. A solid fill is the standard /IC instead.</summary>
     internal const string FillKey = "/PocketPDFFill";
 
@@ -39,7 +42,12 @@ static class AnnotationWriter
     {
         var annotation = new PdfDictionary(document);
         annotation.Elements["/NM"] = new PdfString(Guid.NewGuid().ToString());
-        annotation.Elements["/T"] = new PdfString(Environment.UserName, PdfStringEncoding.Unicode); // author, shown in other viewers' markup lists
+        // Stamped on the markup too, so saving again keeps the same author and time.
+        markup.Author ??= Environment.UserName;
+        markup.Created ??= DateTime.Now;
+        annotation.Elements["/T"] = new PdfString(markup.Author, PdfStringEncoding.Unicode); // author, shown in other viewers' markup lists
+        annotation.Elements.SetDateTime("/CreationDate", markup.Created.Value);
+        WriteModified(annotation, markup);
         Write(document, annotation, markup, page);
         document.Internals.AddObject(annotation);
         return annotation;
@@ -52,7 +60,22 @@ static class AnnotationWriter
     public static void Update(PdfDocument document, PdfDictionary annotation, Markup markup, PageGeometry page)
     {
         annotation.Elements.Remove("/RC"); // rich text would still show the old text when another viewer redraws it
+        string fingerprint = markup.Fingerprint();
+        if (fingerprint != markup.StampedFingerprint) // changed since last stamped: by this user, now (the time of the save)
+        {
+            markup.ModifiedBy = Environment.UserName;
+            markup.Modified = DateTime.Now;
+            markup.StampedFingerprint = fingerprint;
+        }
+        WriteModified(annotation, markup);
         Write(document, annotation, markup, page);
+    }
+
+    /// <summary>When it was last changed (/M), or drawn if never changed; and who changed it.</summary>
+    static void WriteModified(PdfDictionary annotation, Markup markup)
+    {
+        if ((markup.Modified ?? markup.Created) is { } time) annotation.Elements.SetDateTime("/M", time);
+        if (markup.ModifiedBy != null) annotation.Elements[ModifiedByKey] = new PdfString(markup.ModifiedBy, PdfStringEncoding.Unicode);
     }
 
     static void Write(PdfDocument document, PdfDictionary annotation, Markup markup, PageGeometry page)

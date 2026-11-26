@@ -50,6 +50,7 @@ public partial class MainWindow : Window
             HideChangedFileMarkups();
             ShowSheetControls(); // a clip turns Show all on
         };
+        MarkupLayer.PropertiesRequested += ShowMarkupProperties;
         MarkupLayer.SelectionChanged += () =>
         {
             if (_documentSelected) NoticeStatus.Text = "";
@@ -1231,6 +1232,12 @@ public partial class MainWindow : Window
             e.Handled = true;
             return;
         }
+        if (e.Key == Key.System && e.SystemKey == Key.Enter && MarkupLayer.SelectedMarkup != null)
+        {
+            ShowMarkupProperties();
+            e.Handled = true;
+            return;
+        }
         if (e.Key == Key.P && Keyboard.Modifiers == ModifierKeys.Control)
         {
             Print();
@@ -1530,7 +1537,7 @@ public partial class MainWindow : Window
 
         // Each overlay page shows the sheet at its drawn size, so a markup keeps its place on the sheet.
         foreach (var (pageIndex, markups) in loaded.MarkupsByPage.Where(page => page.Key < overlay.Pages.Count))
-            overlay.MarkupsByPage[pageIndex].AddRange(markups.Select(markup => markup.CopyMapped(point => overlay.Pages[pageIndex].ToPdf(pages[pageIndex].ToView(point)))));
+            overlay.MarkupsByPage[pageIndex].AddRange(markups.Select(markup => markup.CopyMapped(point => overlay.Pages[pageIndex].ToPdf(pages[pageIndex].ToView(point)), keepAuthor: true)));
         foreach (var (pageIndex, mmPerPoint) in loaded.MmPerPointByPage.Where(scale => scale.Key < overlay.Pages.Count))
             overlay.MmPerPointByPage[pageIndex] = mmPerPoint;
         // The drawing's unsaved markups now live on the overlay, which counts as unsaved until Save As, so nothing is lost.
@@ -1766,6 +1773,34 @@ public partial class MainWindow : Window
     // ---- Selection, copy and paste ------------------------------------------------------------
 
     void OnSelectAll(object sender, RoutedEventArgs e) => SelectAll();
+
+    void OnMarkupProperties(object sender, RoutedEventArgs e) => ShowMarkupProperties();
+
+    /// <summary>What the selected markup is, who drew it and when, and who last changed it.</summary>
+    void ShowMarkupProperties()
+    {
+        if (MarkupLayer.SelectedMarkup is not { } markup)
+        {
+            MessageBox.Show(this, "Select one markup first.", "Properties");
+            return;
+        }
+        string kind = markup.GetType().Name.Replace("Markup", "") switch
+        {
+            "Callout" when markup is CalloutMarkup { HasBorder: false } => "Tag",
+            "Cloud" when markup is CloudMarkup { TextPosition: not null } => "Callout",
+            var name when name.StartsWith("Cad") => $"CAD {name[3..].ToLowerInvariant()}",
+            var name => name,
+        };
+        static string When(DateTime? time) => time?.ToString("g", CultureInfo.CurrentCulture) ?? "not known";
+        var lines = new List<string> { $"Type: {kind}" };
+        if (markup.Subject != null) lines.Add($"Subject: {markup.Subject}");
+        lines.Add($"Drawn by: {markup.Author ?? "not known"}");
+        lines.Add($"Drawn: {When(markup.Created)}");
+        if (markup.ModifiedBy != null || markup.Modified != null && markup.Modified != markup.Created)
+            lines.Add($"Last changed: {When(markup.Modified)}, by {markup.ModifiedBy ?? "not known"}");
+        if (!markup.IsUnchangedFromFile && markup.FileBounds != null) lines.Add("Changed since the file was opened");
+        MessageBox.Show(this, string.Join(Environment.NewLine, lines), "Properties");
+    }
 
     void OnCopy(object sender, RoutedEventArgs e) => Copy();
 

@@ -18,16 +18,51 @@ public abstract class Markup
     /// <summary>What the markup means (for example "Delete"), from the tool template it was drawn with; the annotation's /Subj. Null for none.</summary>
     public string? Subject { get; set; }
 
+    // Who did what and when, kept in the file for tracking work (and later, for working on one file together).
+    // Not part of the fingerprint: stamping them is not a change to the markup.
+
+    /// <summary>Who drew the markup: the annotation's /T. Null until it is drawn or saved.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? Author { get; set; }
+
+    /// <summary>When it was drawn: /CreationDate.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public DateTime? Created { get; set; }
+
+    /// <summary>Who last changed it, if not its author's first draft: /PocketPDFModifiedBy.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string? ModifiedBy { get; set; }
+
+    /// <summary>When it was last changed: /M.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public DateTime? Modified { get; set; }
+
+    /// <summary>The markup as it was when <see cref="Modified"/> was last stamped, so saving again without a change keeps the time.</summary>
+    internal string? StampedFingerprint { get; set; }
+
+    /// <summary>Makes it the current user's, drawn now: a new markup, or a copy that counts as a new one.</summary>
+    public void StampNew()
+    {
+        Author = Environment.UserName;
+        Created = DateTime.Now;
+        ModifiedBy = null;
+        Modified = null;
+    }
+
     /// <summary>Moves every point of the markup through <paramref name="map"/>.</summary>
     public abstract void Map(Func<PdfPoint, PdfPoint> map);
 
     public void MoveBy(double deltaX, double deltaY) => Map(point => new(point.X + deltaX, point.Y + deltaY));
 
-    /// <summary>A copy with every point mapped (for example onto another page), as a new markup: not linked to any annotation in a file.</summary>
-    public Markup CopyMapped(Func<PdfPoint, PdfPoint> map)
+    /// <summary>
+    /// A copy with every point mapped (for example onto another page), as a new markup: not linked to any annotation in a file.
+    /// It is the current user's, drawn now, unless <paramref name="keepAuthor"/> (the same markup moved, not a copy made).
+    /// </summary>
+    public Markup CopyMapped(Func<PdfPoint, PdfPoint> map, bool keepAuthor = false)
     {
         var copy = Clone();
         copy.Origin = null;
+        if (!keepAuthor) copy.StampNew();
         copy.Map(map);
         return copy;
     }

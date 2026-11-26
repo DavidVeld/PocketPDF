@@ -34,6 +34,43 @@ public class MarkupFileTests
     }
 
     [Fact]
+    public void Who_drew_and_changed_a_markup_and_when_is_kept_in_the_file()
+    {
+        using var source = TestPdf.Create();
+        using var first = new TestPdf();
+        using var second = new TestPdf();
+        var drawnAt = new DateTime(2026, 11, 20, 9, 30, 0);
+        var loaded = MarkupFile.Load(source.FilePath);
+        loaded.MarkupsByPage[PlainPage].Add(new LineMarkup { Start = new(20, 20), End = new(80, 40), Author = "Person A", Created = drawnAt });
+        MarkupFile.Save(loaded, loaded.MarkupsByPage, first.FilePath);
+
+        var reloaded = MarkupFile.Load(first.FilePath);
+        var line = Assert.IsType<LineMarkup>(reloaded.MarkupsByPage[PlainPage].Last());
+        Assert.Equal("Person A", line.Author);
+        Assert.Equal(drawnAt, line.Created);
+        Assert.Null(line.ModifiedBy);
+        Assert.True(line.IsUnchangedFromFile); // reading the history is not a change
+
+        line.MoveBy(5, 0);
+        MarkupFile.Save(reloaded, reloaded.MarkupsByPage, second.FilePath);
+        var changed = Assert.IsType<LineMarkup>(MarkupFile.Load(second.FilePath).MarkupsByPage[PlainPage].Last());
+        Assert.Equal("Person A", changed.Author); // still the author
+        Assert.Equal(drawnAt, changed.Created);
+        Assert.Equal(Environment.UserName, changed.ModifiedBy);
+        Assert.True(changed.Modified > drawnAt);
+    }
+
+    [Fact]
+    public void A_copy_is_a_new_markup_by_whoever_made_it()
+    {
+        var original = new LineMarkup { Author = "Person A", Created = new DateTime(2026, 1, 1), ModifiedBy = "Person B" };
+        var copy = original.CopyMapped(point => point);
+        Assert.Equal(Environment.UserName, copy.Author);
+        Assert.Null(copy.ModifiedBy);
+        Assert.Equal("Person A", original.CopyMapped(point => point, keepAuthor: true).Author);
+    }
+
+    [Fact]
     public void A_turned_page_is_saved_turned_with_its_markups_still_on_the_drawing()
     {
         using var source = TestPdf.Create();

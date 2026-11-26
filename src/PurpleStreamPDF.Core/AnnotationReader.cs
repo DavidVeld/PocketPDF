@@ -12,6 +12,31 @@ static partial class AnnotationReader
 {
     public static Markup? TryRead(PdfDictionary annotation, PageGeometry page)
     {
+        var markup = TryReadMarkup(annotation, page);
+        if (markup == null) return null;
+        markup.Author = annotation.Elements.ContainsKey("/T") ? annotation.Elements.GetString("/T") : null;
+        markup.Created = DateOf(annotation, "/CreationDate");
+        markup.Modified = DateOf(annotation, "/M");
+        markup.ModifiedBy = annotation.Elements.ContainsKey(AnnotationWriter.ModifiedByKey) ? annotation.Elements.GetString(AnnotationWriter.ModifiedByKey) : null;
+        markup.StampedFingerprint = markup.Fingerprint(); // as read: the next change stamps it again
+        return markup;
+    }
+
+    /// <summary>A date, or null if missing or not a date: a bad date mustn't make the markup unreadable.</summary>
+    static DateTime? DateOf(PdfDictionary annotation, string key)
+    {
+        try
+        {
+            return annotation.Elements.ContainsKey(key) && annotation.Elements.GetDateTime(key, DateTime.MinValue) is var date && date != DateTime.MinValue ? date : null;
+        }
+        catch (Exception exception) when (exception is InvalidCastException or FormatException or ArgumentException or IndexOutOfRangeException)
+        {
+            return null;
+        }
+    }
+
+    static Markup? TryReadMarkup(PdfDictionary annotation, PageGeometry page)
+    {
         try
         {
             if (annotation.Elements.GetObject(AnnotationWriter.CadKey) is PdfDictionary cad) return ReadCad(annotation, cad);

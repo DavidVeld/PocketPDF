@@ -91,6 +91,9 @@ public sealed class MarkupCanvas : Canvas
     /// <summary>Raised when a different markup (or none) is selected.</summary>
     public event Action? SelectionChanged;
 
+    /// <summary>Right-click ▸ Properties on a markup.</summary>
+    public event Action? PropertiesRequested;
+
     /// <summary>The selected markups on this page, in drawing order.</summary>
     public IReadOnlyList<Markup> Selection => _selection;
 
@@ -1068,6 +1071,7 @@ public sealed class MarkupCanvas : Canvas
         markup.LineWidth = CurrentLineWidth;
         if (TakesFont(markup)) markup.Font = CurrentFont;
         markup.Subject = CurrentSubject;
+        markup.StampNew();
         _markups.Add(markup);
         MarkupsChanged?.Invoke();
     }
@@ -1635,6 +1639,16 @@ public sealed class MarkupCanvas : Canvas
         if (_cadPoints.Count > 0 && Tool is MarkupTool.CadLine or MarkupTool.CadPolyline)
         {
             FinishCadLine(); // right-click ends the line
+            e.Handled = true;
+            return;
+        }
+        if (Tool == MarkupTool.Select && SelectedSheet == null)
+        {
+            if (TagOf(e.OriginalSource) is Markup clicked && !_selection.Contains(clicked)) Select([clicked]);
+            if (SelectedMarkup == null) return;
+            var properties = new MenuItem { Header = "Properties", InputGestureText = "Alt+Enter" };
+            properties.Click += (_, _) => PropertiesRequested?.Invoke();
+            new ContextMenu { Items = { properties }, PlacementTarget = this, IsOpen = true };
             e.Handled = true;
             return;
         }
