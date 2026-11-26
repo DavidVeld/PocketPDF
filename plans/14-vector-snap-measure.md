@@ -27,7 +27,7 @@ The PDFium bundled with Docnet exports every function needed (checked: `FPDFPage
 ## Prompt
 
 ```
-Add vector snapping and measuring to PocketPDF (WPF, .NET 10). Read PLAN.md and src/PocketPDF.Core/PdfRenderer.cs first. Keep showing the page as the PDFium bitmap. Read the vector geometry into a snap index alongside it; don't redraw the page as WPF shapes.
+Add vector snapping and measuring to PurpleStreamPDF (WPF, .NET 10). Read PLAN.md and src/PurpleStreamPDF.Core/PdfRenderer.cs first. Keep showing the page as the PDFium bitmap. Read the vector geometry into a snap index alongside it; don't redraw the page as WPF shapes.
 
 Step 1, spike (check before building on it): Docnet ships pdfium.dll, which exports FPDF_LoadMemDocument, FPDF_LoadPage, FPDFPage_CountObjects, FPDFPage_GetObject, FPDFPageObj_GetType, FPDFPageObj_GetMatrix, FPDFPath_CountSegments, FPDFPath_GetPathSegment, FPDFPathSegment_GetPoint, FPDFPathSegment_GetType, FPDFPathSegment_GetClose, FPDFFormObj_CountObjects, FPDFFormObj_GetObject. Declare them with [LibraryImport("pdfium")] in a Core class `PdfiumNative`, and call them only inside PdfRenderer's static PdfiumLock. Write a test that generates a PDF with known lines (TestPdf.cs helpers), including a form XObject and a page with /Rotate 90, and checks the extracted segments in PDF space.
 
@@ -37,7 +37,7 @@ Step 2, Core:
 - `DrawingScale`: a ratio (real mm per PDF pt), preset ratios, and calibration from two points + a real length. Read and write the PDF /Measure dictionary (/Type /Measure /Subtype /RL with /R, /X, /D, /A) in MarkupFile, keeping any existing one. Unit-test the round trip.
 - New markups: DistanceMarkup (2 points), PolylengthMarkup (points), AreaMarkup (polygon). Each has a measured value from the scale. Write them as /Line /IT /LineDimension, /PolyLine /IT /PolyLineDimension and /Polygon /IT /PolygonDimension, each with /Measure, /Contents (the value text) and an /AP stream (follow AnnotationWriter and AppearanceBuilder). Read them back in AnnotationReader. Round-trip tests in MarkupFileTests.
 
-Step 3, UI (src/PocketPDF):
+Step 3, UI (src/PurpleStreamPDF):
 - While a snapping tool is active (Distance, Polylength, Area, Cloud, Callout arrow tip), find the snap target on mouse move. Use a radius of ~10 screen px converted to points at the current zoom. Draw a marker on MarkupCanvas: square for Endpoint, X for Intersection, triangle for Midpoint, hourglass for Nearest. Shift = lock to horizontal/vertical from the previous point. Alt = no snap. Build vectors off the UI thread on first use, with a wait cursor. If there are none, show "No line work to snap to on this page".
 - "Scale" picker with presets + "Calibrate…" (click two points, type a length in mm). Per page, shown in the status bar.
 - Live readout of distance/length/area in the status bar while drawing. The placed measurement shows its value as a label.

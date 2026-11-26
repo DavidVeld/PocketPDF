@@ -14,8 +14,8 @@ Suggested order. Each step builds on the one before, so later prompts assume ear
 | 14 | [Vector snapping and measuring](14-vector-snap-measure.md) **(built, app check pending)** | 2–3 days | 9, 11 |
 
 Rules that apply to every prompt (they're repeated inside each one):
-- Core logic goes in `src/PocketPDF.Core` (no WPF types), the UI in `src/PocketPDF`.
+- Core logic goes in `src/PurpleStreamPDF.Core` (no WPF types), the UI in `src/PurpleStreamPDF`.
 - Every PDFium call goes through the one lock in `PdfRenderer` (PDFium isn't thread-safe).
 - PDFsharp stays at 6.2.x (6.5+ is AGPL).
-- New logic gets xUnit tests in `tests/PocketPDF.Core.Tests`; run `dotnet test`.
+- New logic gets xUnit tests in `tests/PurpleStreamPDF.Core.Tests`; run `dotnet test`.
 - When a phase is done, add a "Done." note to `PLAN.md` in the same style as phases 4–8.

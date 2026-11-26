@@ -1,11 +1,11 @@
-# PocketPDF – Build Plan
+# PurpleStreamPDF – Build Plan
 
 A desktop PDF viewer for drawings, built in WPF on .NET 10. It does markups (text, labels with leaders, clouds) saved as standard PDF annotations, and compares two versions of a drawing as a colour overlay.
 
 **Folders**
-- `src/PocketPDF`: the WPF app (window, markup canvas).
-- `src/PocketPDF.Core`: everything with no WPF in it: rendering, page geometry, the markup model. Reusable from other tools later.
-- `tests/PocketPDF.Core.Tests`: xUnit tests. Run them with `dotnet test`.
+- `src/PurpleStreamPDF`: the WPF app (window, markup canvas).
+- `src/PurpleStreamPDF.Core`: everything with no WPF in it: rendering, page geometry, the markup model. Reusable from other tools later.
+- `tests/PurpleStreamPDF.Core.Tests`: xUnit tests. Run them with `dotnet test`.
 - `img`: icons and screenshots.
 - `data`: sample drawings for manual testing. PDFs in it are git-ignored, because they're client data.
 
@@ -66,11 +66,11 @@ Test with real files: drawings exported from CAD, drawings already marked up in 
 
 **Done.** A survey opened, saved and reopened 988 local PDFs, 50 of which carry 3,509 markups from another viewer. It found and fixed:
 - **Saving rewrote every markup.** It dropped other viewers' rich text, subject, fill, columns and replies. Now unchanged markups are saved exactly as they were. Changed ones are updated in place, keeping their ID, author, replies and unknown keys and dropping only the stale rich text. Deleted ones are removed together with their pop-ups and replies.
-- **Markups from other viewers looked different on screen.** No text wrapping, fills or fonts. Now unchanged markups show their own appearance from the file. PocketPDF draws a markup itself only once it's changed, and the page is then redrawn without the file's version.
+- **Markups from other viewers looked different on screen.** No text wrapping, fills or fonts. Now unchanged markups show their own appearance from the file. PurpleStreamPDF draws a markup itself only once it's changed, and the page is then redrawn without the file's version.
 - **Password-protected files.** A file that needs a password to open gives a clear message. A file only protected against changes opens view-only.
 - **Damaged files** give "isn't a valid PDF, or it is damaged" instead of an internal error.
 
-Still open: a text box from another viewer that you edit is redrawn in PocketPDF's simpler style, with no word wrap or fill, until that viewer redraws it.
+Still open: a text box from another viewer that you edit is redrawn in PurpleStreamPDF's simpler style, with no word wrap or fill, until that viewer redraws it.
 
 ## Phase 5 – Overlay compare, same page size (1 day)
 1. Choose "Compare with…" and pick the old revision.
@@ -122,7 +122,7 @@ Compare renders at the current zoom, through the same pipeline as normal viewing
 **Done.** While comparing, click **Export…**. It saves the current view (Both, Old only or New only, aligned) as a one-page PDF at the drawing's own sheet size, with a legend strip below it. The legend shows Old in red, New in blue, Unchanged in black, the file names, the page and the date.
 - **Image and file size:** the overlay is a 150 dpi image, so an A1 printed on A3 comes out at 300 dpi. A generated A1 export was about 200 KB.
 - **Legend size:** the legend scales with the sheet, at 22 pt on A1, so it's still readable at half size.
-- **Printing:** after saving, PocketPDF offers to open the PDF in the default viewer, and you print from there, which already handles printers and fit-to-page. That's simpler than writing WPF print code.
+- **Printing:** after saving, PurpleStreamPDF offers to open the PDF in the default viewer, and you print from there, which already handles printers and fit-to-page. That's simpler than writing WPF print code.
 - **Not included:** markups and auto-clouds aren't in the export, only the overlay.
 
 ## Phase 9 – Undo / redo (½ day)
@@ -168,9 +168,9 @@ Plan and prompt: [plans/11-modern-ui.md](plans/11-modern-ui.md).
 - **Page thumbnails** replace the list of page numbers. A thumbnail is drawn only when it scrolls into view, one at a time, so a long set opens as fast as before. The list follows PgUp/PgDn, and the page list button hides it.
 - **Status bar:** the page ("Page 3 / 40"), the zoom (type a percentage and press Enter), and the cursor position on the sheet in mm from its bottom-left corner.
 - **Start screen:** "Open a PDF or drop one here", with the last 10 files. A file that has since been moved says so and drops off the list.
-- **Remembered** in `%AppData%\PocketPDF\settings.json`: window size and position (only if still on a screen), maximised, page list shown, last folder, recent files. A missing or damaged file just means defaults.
+- **Remembered** in `%AppData%\PurpleStreamPDF\settings.json`: window size and position (only if still on a screen), maximised, page list shown, last folder, recent files. A missing or damaged file just means defaults.
 - **The drawing stays white** in dark mode. The area around it, the borders and the text use theme colours.
-- **App icon:** a drawing sheet with a red revision cloud on a blue tile. `img/make-icon.ps1` draws it at 16–256 px and writes `src/PocketPDF/app.ico` and `img/icon.png`. Below 32 px it leaves out the grid lines, so it still reads.
+- **App icon:** a drawing sheet with a red revision cloud on a blue tile. `img/make-icon.ps1` draws it at 16–256 px and writes `src/PurpleStreamPDF/app.ico` and `img/icon.png`. Below 32 px it leaves out the grid lines, so it still reads.
 - **Checked:** 62 unit tests pass. Screenshots of the running app (captured without clicking or typing) showed the start screen, the recent list, the window size restored from settings, and an open file with thumbnails, status bar and grouped toolbar, all in light mode.
 - **Not checked:** dark mode (it would have meant changing your Windows setting), the compare bar, the zoom box and shortcuts in use, and speed on a 100-page set (the sample has 40).
 - **Known limit:** below about 1100 px wide, the last toolbar buttons (Fit, Compare…) move into the toolbar's overflow menu (»).
@@ -196,15 +196,15 @@ Plan and prompt: [plans/12-text-selection.md](plans/12-text-selection.md).
 Plan and prompt: [plans/13-combine-pdfs.md](plans/13-combine-pdfs.md).
 
 **Built; the Explorer menu itself still to try by hand.** Select PDFs in Explorer, right-click → **Combine PDFs** (on Windows 11 under "Show more options"). A window lists the files. Order them, check the name (`Binder_2026-11-20.pdf`, or `(2)`, `(3)`… if taken) and press Enter. The binder goes in the first file's folder. Afterwards: **Open**, **Show in folder** or **Close**.
-- **Turning it on:** the new **⋯** button at the end of the toolbar → "Add “Combine PDFs” to the Explorer menu" (and "Remove" once it's there). It writes a classic menu entry under `HKCU\Software\Classes\SystemFileAssociations\.pdf\shell\PocketPDF.Combine`: no admin rights, no shell extension. The entry starts the PocketPDF it was added from, so add it again after moving the app.
-- **How the files get together:** Explorer starts one PocketPDF per selected file. The first one holds a named mutex and listens on a named pipe (both named with the user's SID). The others send it their path and exit. It keeps listening while its window is open, so files from a slow Explorer still arrive, and Combine only becomes available once no file has arrived for 0.6 s. A path sent down the pipe is used only if it's an existing `.pdf`.
+- **Turning it on:** the new **⋯** button at the end of the toolbar → "Add “Combine PDFs” to the Explorer menu" (and "Remove" once it's there). It writes a classic menu entry under `HKCU\Software\Classes\SystemFileAssociations\.pdf\shell\PurpleStreamPDF.Combine`: no admin rights, no shell extension. The entry starts the PurpleStreamPDF it was added from, so add it again after moving the app.
+- **How the files get together:** Explorer starts one PurpleStreamPDF per selected file. The first one holds a named mutex and listens on a named pipe (both named with the user's SID). The others send it their path and exit. It keeps listening while its window is open, so files from a slow Explorer still arrive, and Combine only becomes available once no file has arrived for 0.6 s. A path sent down the pipe is used only if it's an existing `.pdf`.
 - **Order:** Explorer doesn't tell programs which file was clicked first. It starts the processes all at once, so they arrive in random order. The list therefore starts in Explorer's own name order (`StrCmpLogicalW`, so S-2 comes before S-10) until you move a file. You can drag, use Move up/down (Alt+↑/↓), Sort by name, or Remove (Delete).
 - **Combining (`PdfCombiner`, PDFsharp):** all pages in order, keeping page rotation and markups. Bookmarks are dropped. The file is written next to the target and then moved into place, never over an existing file.
-- **Files left out, with the reason shown:** damaged files; files that need a password to open; and files **protected against changes**. PDFsharp would copy those without their protection, which would hand out an unlocked copy of an issued drawing. They already open view-only in PocketPDF for the same reason. If none of the files can be read, nothing is written.
+- **Files left out, with the reason shown:** damaged files; files that need a password to open; and files **protected against changes**. PDFsharp would copy those without their protection, which would hand out an unlocked copy of an issued drawing. They already open view-only in PurpleStreamPDF for the same reason. If none of the files can be read, nothing is written.
 - **Checked:**
-  - 6 new unit tests: page order, rotation and markups kept (and read back by PocketPDF), damaged, password and change-protected files skipped, nothing written when nothing is readable, an existing file never overwritten, and the binder name counting up.
+  - 6 new unit tests: page order, rotation and markups kept (and read back by PurpleStreamPDF), damaged, password and change-protected files skipped, nothing written when nothing is readable, an existing file never overwritten, and the binder name counting up.
   - Starting 3 and then 30 `--combine` processes at once, as Explorer does, gave one window with all the files, in name order.
-  - Combining 30 copies of the 40-page sample gave 1,200 pages in 1.3 s, kept all 90 markups, and reopens in PocketPDF.
+  - Combining 30 copies of the 40-page sample gave 1,200 pages in 1.3 s, kept all 90 markups, and reopens in PurpleStreamPDF.
 - **Not checked:** the registry entry and the real Explorer menu (that's your registry to change), and clicking through the window.
 - **Later:** the short Windows 11 menu (without "Show more options") needs an `IExplorerCommand` shell extension and a signed app package.
 
@@ -220,7 +220,7 @@ Plan and prompt: [plans/14-vector-snap-measure.md](plans/14-vector-snap-measure.
 - **Snapping:** with the Measure, Cloud and Callout tools, and while calibrating, points snap within 10 screen pixels. A green symbol shows what's caught: square = end point, X = crossing, triangle = midpoint, hourglass = on a line. Shift locks to straight across or up from the last point, and Alt turns snapping off. Grip drags don't snap.
 - **Scale:** the status bar's **Scale** button lists 1:1 to 1:2500, plus **Calibrate…**: click both ends of a known length, then type its real length in mm. Each page keeps its own scale. A measurement keeps the scale it was made at, so changing the page scale later doesn't change it.
 - **In the file:**
-  - Measurements are saved as the standard PDF measurement annotation types (ISO 32000), each with a `/Measure` scale and a drawn appearance: `/Line /LineDimension` (distance), `/PolyLine /PolyLineDimension` (length) and `/Polygon /PolygonDimension` (area). Ones from other apps whose units PocketPDF knows (mm, cm, m, in, ft…) can be edited. Others are left untouched.
+  - Measurements are saved as the standard PDF measurement annotation types (ISO 32000), each with a `/Measure` scale and a drawn appearance: `/Line /LineDimension` (distance), `/PolyLine /PolyLineDimension` (length) and `/Polygon /PolygonDimension` (area). Ones from other apps whose units PurpleStreamPDF knows (mm, cm, m, in, ft…) can be edited. Others are left untouched.
   - The page scale is saved as a page viewport (`/VP`) and read from one, other viewers' included. A 1/8" = 1'-0" from another viewer reads as 1:96.
 - **How the line work is read (`VectorExtractor`):** Docnet doesn't wrap PDFium's page-object functions, so they're called directly in the same `pdfium.dll`, under the existing PDFium lock. It walks every path, including those in nested form XObjects, multiplying their matrices. Curves are split into 8 straight pieces. Text and images are left out. It stops at 1,000,000 segments and says so.
 - **Snap index (`SnapIndex`):** a 16 pt grid of cells. A lookup tries end points first, then crossings (of at most the 150 nearest lines, so hatching can't stall it), then midpoints, then the nearest point on a line.
@@ -230,7 +230,7 @@ Plan and prompt: [plans/14-vector-snap-measure.md](plans/14-vector-snap-measure.
   - Measurements saved into a sample file show in the app as saved, with "Scale 1:50" read back in the status bar.
 - **Not checked:** clicking, snapping and calibrating in the app (no scripted input while the machine is in use), another viewer reading the saved measurements and scale (none here to try), and very dense sheets near the segment limit.
 - **Limits:**
-  - A page that already has viewports (from another viewer) keeps them as they are, so a scale set on it in PocketPDF isn't saved to the file. Its measurements still carry their own scale.
+  - A page that already has viewports (from another viewer) keeps them as they are, so a scale set on it in PurpleStreamPDF isn't saved to the file. Its measurements still carry their own scale.
   - Units are mm and m² only.
   - Grip drags don't snap.
 

@@ -23,9 +23,9 @@ Hit-testing for grips: draw them as `Rectangle`s tagged with `(markup, gripIndex
 ## Prompt
 
 ```
-Add editing of placed markups to PocketPDF (WPF, .NET 10). Read PLAN.md and plans/09-undo-redo.md first. Undo/redo should already exist: every edit must come out as exactly one undo step.
+Add editing of placed markups to PurpleStreamPDF (WPF, .NET 10). Read PLAN.md and plans/09-undo-redo.md first. Undo/redo should already exist: every edit must come out as exactly one undo step.
 
-Current state (src/PocketPDF/MarkupCanvas.cs): the Select tool hit-tests via `(e.OriginalSource as FrameworkElement)?.Tag as Markup`, drags to MoveBy, and raises MarkupsChanged on mouse-up if something moved. Delete removes. ApplyStyle restyles. Text entry uses OpenTextEditor(position, Func<string, Markup> createMarkup) with an on-canvas TextBox (Enter commits, Shift+Enter for a new line). Canvas units are view points (1 unit = 1 pt, top-left origin); PageGeometry converts between ViewPoint and PdfPoint (handles /Rotate). Markup types: src/PocketPDF.Core/Markups.cs. Geometry for drawing: CloudGeometry, LabelGeometry, TextLayout in Core.
+Current state (src/PurpleStreamPDF/MarkupCanvas.cs): the Select tool hit-tests via `(e.OriginalSource as FrameworkElement)?.Tag as Markup`, drags to MoveBy, and raises MarkupsChanged on mouse-up if something moved. Delete removes. ApplyStyle restyles. Text entry uses OpenTextEditor(position, Func<string, Markup> createMarkup) with an on-canvas TextBox (Enter commits, Shift+Enter for a new line). Canvas units are view points (1 unit = 1 pt, top-left origin); PageGeometry converts between ViewPoint and PdfPoint (handles /Rotate). Markup types: src/PurpleStreamPDF.Core/Markups.cs. Geometry for drawing: CloudGeometry, LabelGeometry, TextLayout in Core.
 
 Build:
 1. Double-click (ClickCount == 2) on a TextMarkup or CalloutMarkup with the Select tool reopens the TextBox at its position, prefilled, same font size. Commit updates the existing markup (empty text deletes it), Esc restores it. Extend OpenTextEditor instead of copying it.

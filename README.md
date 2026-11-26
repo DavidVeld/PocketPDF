@@ -1,10 +1,10 @@
-# PocketPDF
+# PurpleStreamPDF
 
 A small Windows PDF viewer and markup tool for engineering drawings. Open a drawing, mark it up, measure it to
 scale, draw on it with simple CAD tools, overlay an old revision to see what changed, and save the markups back
 into the PDF as standard annotations that other viewers show too.
 
-![PocketPDF in light mode with a drawing open: clouds, callouts, hatched fills, measurements and CAD hatching on a sample sheet](img/screenshot.png)
+![PurpleStreamPDF in light mode with a drawing open: clouds, callouts, hatched fills, measurements and CAD hatching on a sample sheet](img/screenshot.png)
 
 *A made-up sample sheet with one of each kind of markup. The style of new markups is set along the top, the tools
 are down the right, and pages, snap and its settings, zoom and the drawing scale (green once set) are in the status bar.*
@@ -36,7 +36,7 @@ are down the right, and pages, snap and its settings, zoom and the drawing scale
 - **Compare**: overlay an old revision (old in red, new in blue), line the two up on two points, put clouds
   round every change, and export the overlay or carry on marking it up.
 - **Tabs**: several documents open at once, each with its own undo history, page, zoom, scale and compare.
-  PDFs opened together from Explorer, or while PocketPDF is open, all go into tabs of the one window.
+  PDFs opened together from Explorer, or while PurpleStreamPDF is open, all go into tabs of the one window.
 - **Pages**: the page list, and first / previous / next / last buttons in the status bar, where you can also
   type a page number. Rotate a page clockwise, counter-clockwise or 180° with its markups; saving keeps it turned.
 - **New sheet**: a blank page in A4 to A0 or a custom size, portrait or landscape.
@@ -114,19 +114,19 @@ Needs Windows 10 or 11 and the [.NET 10 SDK](https://dotnet.microsoft.com/downlo
 
 ```powershell
 dotnet build
-dotnet run --project src/PocketPDF
-dotnet test tests/PocketPDF.Core.Tests
+dotnet run --project src/PurpleStreamPDF
+dotnet test tests/PurpleStreamPDF.Core.Tests
 ```
 
-To open a file straight away: `dotnet run --project src/PocketPDF -- path\to\drawing.pdf`.
+To open a file straight away: `dotnet run --project src/PurpleStreamPDF -- path\to\drawing.pdf`.
 
 ### Project layout
 
 | Folder | What's in it |
 | --- | --- |
-| `src/PocketPDF` | The WPF app: the window, the markup canvas, dialogs. |
-| `src/PocketPDF.Core` | Everything that can be tested without a window: reading and writing markups, geometry, scales, compare, combining. |
-| `tests/PocketPDF.Core.Tests` | xUnit tests for the core library. |
+| `src/PurpleStreamPDF` | The WPF app: the window, the markup canvas, dialogs. |
+| `src/PurpleStreamPDF.Core` | Everything that can be tested without a window: reading and writing markups, geometry, scales, compare, combining. |
+| `tests/PurpleStreamPDF.Core.Tests` | xUnit tests for the core library. |
 
 PDFs are drawn with [Docnet](https://github.com/GowenGit/docnet) (PDFium) and edited with
 [PDFsharp](https://www.pdfsharp.com/). PDFsharp stays at 6.2.x: later versions have a different licence.
@@ -137,7 +137,7 @@ The version is `0.x.y`, made at build time from the number of git commits since 
 commit is a new version, 0.0.1 up to 0.0.999, then 0.1.0. Nothing needs bumping by hand. It shows in the title
 bar and under Help ▸ About. A build without git (from a downloaded zip) shows the .NET default, 1.0.0.
 
-At startup PocketPDF asks GitHub for the latest release and, when it is newer, offers to open its download page
+At startup PurpleStreamPDF asks GitHub for the latest release and, when it is newer, offers to open its download page
 (Help ▸ Check for updates does the same on demand). Tag releases with the version they were built from, as
 `v0.x.y`; with no release published, the startup check stays quiet.
 

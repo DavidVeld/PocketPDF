@@ -28,12 +28,12 @@
 ## Prompt
 
 ```
-Implement undo/redo for markups in PocketPDF (WPF, .NET 10). Read PLAN.md first for context and conventions.
+Implement undo/redo for markups in PurpleStreamPDF (WPF, .NET 10). Read PLAN.md first for context and conventions.
 
 Current state:
-- Markups live in LoadedPdf.MarkupsByPage (src/PocketPDF.Core/MarkupFile.cs): a mutable List<Markup> per page. The same list instance is shared by MarkupCanvas, MainWindow and MarkupFile.Save, so it must be changed in place, never replaced.
-- Markup types are in src/PocketPDF.Core/Markups.cs. Each has an internal `Origin` (the annotation it was read from). `IsUnchangedFromFile` compares a JSON fingerprint with Origin.Fingerprint. Unchanged file markups are drawn by PDFium with their own appearance; changed ones are hidden from the render and drawn by us (MainWindow.HideChangedFileMarkups).
-- MarkupCanvas (src/PocketPDF/MarkupCanvas.cs) raises MarkupsChanged after every add, move, restyle and delete. MainWindow.OnAutoCloud adds clouds directly to the list WITHOUT raising it.
+- Markups live in LoadedPdf.MarkupsByPage (src/PurpleStreamPDF.Core/MarkupFile.cs): a mutable List<Markup> per page. The same list instance is shared by MarkupCanvas, MainWindow and MarkupFile.Save, so it must be changed in place, never replaced.
+- Markup types are in src/PurpleStreamPDF.Core/Markups.cs. Each has an internal `Origin` (the annotation it was read from). `IsUnchangedFromFile` compares a JSON fingerprint with Origin.Fingerprint. Unchanged file markups are drawn by PDFium with their own appearance; changed ones are hidden from the render and drawn by us (MainWindow.HideChangedFileMarkups).
+- MarkupCanvas (src/PurpleStreamPDF/MarkupCanvas.cs) raises MarkupsChanged after every add, move, restyle and delete. MainWindow.OnAutoCloud adds clouds directly to the list WITHOUT raising it.
 
 Build:
 1. Core: `public Markup Clone()` on Markup. Deep-copy the point lists (Vertices, Points) and keep Origin. Unit test: a clone of a file-loaded markup is still IsUnchangedFromFile, and moving the clone doesn't move the original.

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PurpleStreamPDF/PurpleStreamPDF.csproj" />
+    <Project Path="src/PurpleStreamPDF.Core/PurpleStreamPDF.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PurpleStreamPDF.Core.Tests/PurpleStreamPDF.Core.Tests.csproj" />
+  </Folder>
+</Solution>

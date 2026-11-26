@@ -1,4 +1,4 @@
-# Draws the PocketPDF icon (a drawing sheet with a red revision cloud) and writes src/PocketPDF/app.ico and img/icon.png.
+# Draws the PurpleStreamPDF icon (a drawing sheet with a red revision cloud) and writes src/PurpleStreamPDF/app.ico and img/icon.png.
 # Run from the repo root: powershell -ExecutionPolicy Bypass -File img/make-icon.ps1 [-PreviewDir <folder for each size as PNG>]
 param([string]$PreviewDir)
 Add-Type -AssemblyName System.Drawing
@@ -96,5 +96,5 @@ for ($i = 0; $i -lt $sizes.Count; $i++) {
     $offset += $pngs[$i].Length
 }
 foreach ($png in $pngs) { $w.Write($png) }
-[IO.File]::WriteAllBytes("$root\src\PocketPDF\app.ico", $out.ToArray())
+[IO.File]::WriteAllBytes("$root\src\PurpleStreamPDF\app.ico", $out.ToArray())
 "Wrote app.ico ($($out.Length) bytes) and img/icon.png"

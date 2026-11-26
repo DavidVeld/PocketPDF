@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/PocketPDF/PocketPDF.csproj" />
-    <Project Path="src/PocketPDF.Core/PocketPDF.Core.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/PocketPDF.Core.Tests/PocketPDF.Core.Tests.csproj" />
-  </Folder>
-</Solution>

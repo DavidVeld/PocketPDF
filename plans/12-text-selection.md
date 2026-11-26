@@ -24,7 +24,7 @@
 ## Prompt
 
 ```
-Add text selection and copy to PocketPDF (WPF, .NET 10). Read PLAN.md and src/PocketPDF.Core/PdfRenderer.cs first.
+Add text selection and copy to PurpleStreamPDF (WPF, .NET 10). Read PLAN.md and src/PurpleStreamPDF.Core/PdfRenderer.cs first.
 
 Use Docnet (already referenced; it wraps PDFium): `IPageReader.GetCharacters()` returns Character { Char, Box { Left, Top, Right, Bottom } } in rendered-page pixels. Open the reader with PageDimensions(1) so the boxes are in view points, the same units as MarkupCanvas. Every PDFium call must go through PdfRenderer's static PdfiumLock. First write a quick test confirming the boxes match PageGeometry view coordinates, including a page with /Rotate 90 (TestPdf.cs has helpers for generating PDFs). If they don't match, convert them.
 
@@ -33,7 +33,7 @@ Core:
 2. `PageText`: IReadOnlyList of (char, ViewRect) in PDFium order. CharIndexAt(ViewPoint, tolerance). WordAt(index). TextOf(start, end): insert '\n' when the next char starts a new line (its top differs by more than half the char height) and ' ' for a horizontal gap bigger than ~0.3 × char width, unless a space is already there. HighlightRects(start, end): one merged ViewRect per line.
 3. Unit tests with generated PDFs: two lines of text, text without space characters, a rotated page.
 
-UI (src/PocketPDF):
+UI (src/PurpleStreamPDF):
 4. MarkupTool.SelectText with an I-beam cursor, in the tool group (glyph E8C1, shortcut S if single-key shortcuts exist). Drag selects from the char under mouse-down to the char under the mouse. Double-click selects a word. Ctrl+A selects the whole page while the tool is active.
 5. Draw the selection as semi-transparent accent rectangles on MarkupCanvas. They're not in the markup list and are cleared on page change or tool change.
 6. Ctrl+C and a right-click ContextMenu "Copy" call Clipboard.SetText. The context menu also has "Highlight selection", which adds one HighlightMarkup per line rectangle through the normal MarkupsChanged path, so it's undoable and saved.
