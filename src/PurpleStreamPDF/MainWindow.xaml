@@ -227,6 +227,10 @@
                           ToolTip="Overlay an old revision of this drawing: old in red, new in blue, unchanged in black">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8C8;" /></MenuItem.Icon>
                 </MenuItem>
+                <Separator />
+                <MenuItem Header="Save tool as te_mplate…" Click="OnSaveTemplate" ToolTip="Save the tool in use and its style under a name, as a button on the tool bar">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE710;" /></MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_CAD tools" ToolTip="Experimental. On once the sheet has a scale (Tools ▸ Calibrate, or the scale in the status bar)">
                 <MenuItem Header="_Line" Tag="CadLineTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadLineTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadLineTool}" />
@@ -415,6 +419,11 @@
                 </ComboBoxItem>
             </ComboBox>
             <Separator />
+            <!-- Tool templates: the code puts a button here for each one. -->
+            <StackPanel x:Name="TemplateBar" Orientation="Horizontal" />
+            <Button Click="OnSaveTemplate" ToolTip="Save the tool in use and its style as a template, under a name. Markups drawn with it carry the name as their subject, for whoever (or whatever) reads the file">
+                <TextBlock Style="{StaticResource ToolIcon}" Text="&#xE710;" />
+            </Button>
         </ToolBar>
 
         <!-- One tab per open document: just the headers. The page view below is shared and shows the selected tab's document. -->

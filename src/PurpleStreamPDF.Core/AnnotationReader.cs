@@ -31,6 +31,7 @@ static partial class AnnotationReader
                 _ => null,
             };
             if (markup != null && annotation.Elements.ContainsKey(AnnotationWriter.FontKey)) markup.Font = annotation.Elements.GetString(AnnotationWriter.FontKey);
+            if (markup != null && annotation.Elements.ContainsKey("/Subj")) markup.Subject = annotation.Elements.GetString("/Subj");
             return markup;
         }
         catch (Exception exception) when (exception is InvalidCastException or IndexOutOfRangeException or ArgumentException or FormatException)

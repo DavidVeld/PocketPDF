@@ -10,7 +10,7 @@ public class MarkupFileTests
         [
             new TextMarkup { TextPosition = new(200, 300), Text = "Ø 20 bar – check\nsecond line", FontSize = 10, Color = "#1E88E5" },
             new CalloutMarkup { ArrowTip = new(300, 200), TextPosition = new(400, 300), Text = "Check beam", FontSize = 14, LineWidth = 2, Font = "Consolas" },
-            new CloudMarkup { Vertices = [new(150, 100), new(250, 100), new(250, 180), new(150, 180)], Color = "#43A047", LineWidth = 0.5 },
+            new CloudMarkup { Vertices = [new(150, 100), new(250, 100), new(250, 180), new(150, 180)], Color = "#43A047", LineWidth = 0.5, Subject = "Add" },
             new HighlightMarkup { Points = [new(120, 320), new(200, 330), new(280, 310)], Color = "#FFFF00", Thickness = 10 },
         ],
         [PlainPage] = [new CloudMarkup { Vertices = [new(20, 20), new(80, 20), new(50, 80)] }],
@@ -200,6 +200,7 @@ public class MarkupFileTests
         Assert.IsType(expected.GetType(), actual);
         Assert.Equal(expected.Color, actual.Color);
         Assert.Equal(expected.Font, actual.Font);
+        Assert.Equal(expected.Subject, actual.Subject);
         switch (expected)
         {
             case TextMarkup text:

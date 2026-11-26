@@ -15,6 +15,9 @@ public abstract class Markup
     /// <summary>Font family of the text of text, callouts, tags and measurements; null for the default (Arial on screen, Helvetica in the file).</summary>
     public string? Font { get; set; }
 
+    /// <summary>What the markup means (for example "Delete"), from the tool template it was drawn with; the annotation's /Subj. Null for none.</summary>
+    public string? Subject { get; set; }
+
     /// <summary>Moves every point of the markup through <paramref name="map"/>.</summary>
     public abstract void Map(Func<PdfPoint, PdfPoint> map);
 

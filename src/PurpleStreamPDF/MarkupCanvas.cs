@@ -193,6 +193,8 @@ public sealed class MarkupCanvas : Canvas
     public string? CurrentFill { get; set; }
     /// <summary>Font of new text, callouts, tags and measurements, or null for the default.</summary>
     public string? CurrentFont { get; set; }
+    /// <summary>The meaning given to new markups by the tool template in use; null for a plain tool.</summary>
+    public string? CurrentSubject { get; set; }
 
     /// <summary>Markups whose font can change: text, callouts, tags (also a cloud's), measurements and dimensions.</summary>
     public static bool TakesFont(Markup markup) => markup is TextMarkup or CalloutMarkup or MeasureMarkup or CadDimensionMarkup or CloudMarkup { TextPosition: not null };
@@ -1065,6 +1067,7 @@ public sealed class MarkupCanvas : Canvas
         markup.Color = markup is CadHatchMarkup ? CurrentFill ?? CurrentColor : CurrentColor; // a hatch in the fill colour; the line colour while "No fill" is picked
         markup.LineWidth = CurrentLineWidth;
         if (TakesFont(markup)) markup.Font = CurrentFont;
+        markup.Subject = CurrentSubject;
         _markups.Add(markup);
         MarkupsChanged?.Invoke();
     }

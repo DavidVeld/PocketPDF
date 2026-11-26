@@ -375,6 +375,9 @@ static class AnnotationWriter
         if (markup is CadMarkup) annotation.Elements["/OC"] = CadLayer(document).Reference;
         if (markup.Font != null) annotation.Elements[FontKey] = new PdfString(markup.Font, PdfStringEncoding.Unicode);
         else annotation.Elements.Remove(FontKey);
+        // Only when it changed, so another viewer's subject stays as written; null leaves it too.
+        if (markup.Subject != null && annotation.Elements.GetString("/Subj") != markup.Subject)
+            annotation.Elements["/Subj"] = new PdfString(markup.Subject, PdfStringEncoding.Unicode);
 
         var rect = page.ToPdf(drawnArea);
         annotation.Elements["/Type"] = new PdfName("/Annot");

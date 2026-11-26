@@ -377,6 +377,7 @@ public partial class MainWindow : Window
         SelectByTag(ShapePicker, tag => tag == _settings.AreaShape);
         SelectByTag(LineStylePicker, tag => tag == _settings.AreaOutline);
         SelectByTag(HatchPicker, tag => tag == _settings.HatchPattern);
+        ShowTemplateButtons();
         UpdatePagePanel();
         if (_settings is { Left: { } left, Top: { } top, Width: { } width, Height: { } height } && width > 200 && height > 150)
         {
@@ -2169,6 +2170,7 @@ public partial class MainWindow : Window
     {
         if (MarkupLayer == null) return; // fires while the window is still loading
         var tool = Enum.Parse<MarkupTool>((string)((FrameworkElement)sender).Tag);
+        MarkupLayer.CurrentSubject = null; // a plain tool; a template sets its own after this
         if (MarkupCanvas.IsCadTool(tool) && !CadLayerMenuItem.IsChecked)
         {
             CadLayerMenuItem.IsChecked = true;
@@ -2285,14 +2287,19 @@ public partial class MainWindow : Window
             picker.SelectedItem = previous;
             return;
         }
-        string hex = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+        picker.SelectedItem = ColorItem(picker, customItem, $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}"); // the picker's SelectionChanged applies it
+    }
+
+    /// <summary>The picker's item for a colour, added (once) in front of <paramref name="customItem"/> if it isn't listed.</summary>
+    static ComboBoxItem ColorItem(ComboBox picker, ComboBoxItem customItem, string hex)
+    {
         var item = picker.Items.OfType<ComboBoxItem>().FirstOrDefault(item => string.Equals(item.Tag as string, hex, StringComparison.OrdinalIgnoreCase));
         if (item == null)
         {
             item = new ComboBoxItem { Tag = hex, Content = ColorSwatch(hex, hex) };
             picker.Items.Insert(picker.Items.IndexOf(customItem), item);
         }
-        picker.SelectedItem = item; // the picker's SelectionChanged applies it
+        return item;
     }
 
     static StackPanel ColorSwatch(string hex, string name) => new()

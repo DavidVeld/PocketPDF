@@ -35,6 +35,11 @@ public sealed class AppSettings
     /// <summary>Dark or light window, as switched in View; null follows Windows.</summary>
     public bool? DarkMode { get; set; }
     public string? LastFolder { get; set; }
+    /// <summary>The tool templates on the tool bar. To start with, three clouded callouts whose colour says what to do, for review markups a script or AI can act on.</summary>
+    public List<ToolTemplate> Templates { get; set; } = [Review("Delete", "#E53935"), Review("Edit", "#1E88E5"), Review("Add", "#43A047")];
+
+    static ToolTemplate Review(string name, string color) =>
+        new() { Name = name, Tool = "CalloutTool", Styles = { ["ColorPicker"] = color, ["LineStylePicker"] = "Cloud" } };
     public List<string> RecentFiles { get; set; } = [];
 
     /// <summary>The saved settings, or defaults if there are none or the file is unreadable.</summary>
@@ -70,6 +75,16 @@ public sealed class AppSettings
         if (RecentFiles.Count > MaxRecentFiles) RecentFiles.RemoveRange(MaxRecentFiles, RecentFiles.Count - MaxRecentFiles);
         LastFolder = Path.GetDirectoryName(filePath);
     }
+}
+
+/// <summary>A tool and its style saved under a name. Markups drawn with it carry the name as their subject (/Subj in the file).</summary>
+public sealed class ToolTemplate
+{
+    public string Name { get; set; } = "";
+    /// <summary>The tool's button, for example "CalloutTool".</summary>
+    public string Tool { get; set; } = "";
+    /// <summary>Each style picker's name and the tag of the item picked in it.</summary>
+    public Dictionary<string, string> Styles { get; set; } = [];
 }
 
 /// <summary>Shows a path's file name or its folder, for the recent files list.</summary>
