@@ -2,6 +2,9 @@ using System.Runtime.InteropServices;
 
 namespace PurpleStreamPDF.Core;
 
+/// <summary>A part of a page drawn at some scale, in whole pixels from the top-left of the whole page at that scale.</summary>
+public readonly record struct PixelArea(int Left, int Top, int Width, int Height);
+
 /// <summary>A straight piece of the drawing's line work, in PDF space.</summary>
 public readonly record struct LineSegment(PdfPoint A, PdfPoint B);
 
@@ -45,12 +48,12 @@ public static class VectorExtractor
     /// Renders a page like Docnet does, but with every line drawn one pixel wide ("line weights off"). Only PDFium's
     /// in-memory copy of the page is changed. Annotations keep their own line widths.
     /// </summary>
-    internal static (byte[] BgraPixels, int Width, int Height) RenderHairlines(byte[] pdfBytes, int pageIndex, double scale, int flags) =>
+    internal static (byte[] BgraPixels, int Width, int Height) RenderHairlines(byte[] pdfBytes, int pageIndex, double scale, int flags, PixelArea? area = null) =>
         WithPage(pdfBytes, pageIndex, page =>
         {
             // Width 0 is PDF's "thinnest line the device can draw": one pixel at any zoom.
             EachObject(page, (pageObject, type) => { if (type == PathObject) Native.FPDFPageObj_SetStrokeWidth(pageObject, 0); });
-            return RenderPage(page, scale, flags);
+            return RenderPage(page, scale, flags, area);
         });
 
     /// <summary>The page drawn as is, then again with all its text see-through, at one scale and without annotations.</summary>
@@ -68,15 +71,18 @@ public static class VectorExtractor
             return (new PageBitmap(withText.BgraPixels, withText.Width, withText.Height), new PageBitmap(withoutText.BgraPixels, withoutText.Width, withoutText.Height));
         });
 
-    static (byte[] BgraPixels, int Width, int Height) RenderPage(IntPtr page, double scale, int flags)
+    /// <summary>The page at <paramref name="scale"/>, or only <paramref name="area"/> of it (in pixels of the whole page at that scale).</summary>
+    static (byte[] BgraPixels, int Width, int Height) RenderPage(IntPtr page, double scale, int flags, PixelArea? area = null)
     {
-        int width = (int)(Native.FPDF_GetPageWidthF(page) * scale), height = (int)(Native.FPDF_GetPageHeightF(page) * scale);
+        int pageWidth = (int)(Native.FPDF_GetPageWidthF(page) * scale), pageHeight = (int)(Native.FPDF_GetPageHeightF(page) * scale);
+        var (left, top, width, height) = area ?? new PixelArea(0, 0, pageWidth, pageHeight);
         var bitmap = Native.FPDFBitmap_Create(width, height, 1);
         if (bitmap == IntPtr.Zero) throw new OutOfMemoryException("Not enough memory to draw the page.");
         try
         {
             Native.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, 0);
-            Native.FPDF_RenderPageBitmap(bitmap, page, 0, 0, width, height, 0, flags);
+            // The whole page, shifted so the area lands on the bitmap: PDFium draws only what falls inside it.
+            Native.FPDF_RenderPageBitmap(bitmap, page, -left, -top, pageWidth, pageHeight, 0, flags);
             var buffer = Native.FPDFBitmap_GetBuffer(bitmap);
             int stride = Native.FPDFBitmap_GetStride(bitmap);
             var pixels = new byte[width * height * 4];
@@ -110,8 +116,8 @@ public static class VectorExtractor
     internal static (int Width, int Height) PageSize(byte[] pdfBytes, int pageIndex) =>
         WithPage(pdfBytes, pageIndex, page => ((int)Native.FPDF_GetPageWidthF(page), (int)Native.FPDF_GetPageHeightF(page)));
 
-    internal static (byte[] BgraPixels, int Width, int Height) Render(byte[] pdfBytes, int pageIndex, double scale, int flags) =>
-        WithPage(pdfBytes, pageIndex, page => RenderPage(page, scale, flags));
+    internal static (byte[] BgraPixels, int Width, int Height) Render(byte[] pdfBytes, int pageIndex, double scale, int flags, PixelArea? area = null) =>
+        WithPage(pdfBytes, pageIndex, page => RenderPage(page, scale, flags, area));
 
     /// <summary>
     /// The page's characters in PDFium's reading order, with boxes in whole pixels of the page drawn at <paramref name="scale"/>.

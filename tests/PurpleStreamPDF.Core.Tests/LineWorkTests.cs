@@ -27,6 +27,26 @@ public class LineWorkTests
     }
 
     [Theory]
+    [InlineData(0, false, 100, 600)] // round the rectangle and the bottom line
+    [InlineData(90, false, 30, 100)] // the same, turned: the line runs down the left
+    [InlineData(0, true, 100, 600)]
+    public void An_area_draws_the_same_pixels_as_that_part_of_the_whole_page(int rotation, bool hairlines, int left, int top)
+    {
+        using var pdf = TestPdf.CreateWithLineWork(rotation);
+        var renderer = new PdfRenderer(File.ReadAllBytes(pdf.FilePath));
+        var whole = renderer.Render(0, scale: 3, hairlines: hairlines);
+        var area = new PixelArea(left, top, Width: 300, Height: 250);
+
+        var part = renderer.Render(0, scale: 3, hairlines: hairlines, area: area);
+
+        Assert.Equal((area.Width, area.Height), (part.Width, part.Height));
+        for (int row = 0; row < area.Height; row++)
+            Assert.Equal(whole.BgraPixels.AsSpan(((area.Top + row) * whole.Width + area.Left) * 4, area.Width * 4).ToArray(),
+                part.BgraPixels.AsSpan(row * area.Width * 4, area.Width * 4).ToArray());
+        Assert.Contains(part.BgraPixels, value => value != 0); // the area has some of the drawing in it, not only background
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(90)]
     public void Lines_rectangles_curves_transforms_and_forms_come_out_in_pdf_space(int rotation)

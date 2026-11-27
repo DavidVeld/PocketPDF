@@ -837,6 +837,9 @@
                              The window's layout rounding puts the zoomed grid on whole pixels. The markup canvas sets the page size. -->
                         <Image x:Name="PageImage" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top" UseLayoutRounding="False"
                                RenderOptions.BitmapScalingMode="HighQuality" />
+                        <!-- Zoomed in past what one page image can hold: the part in view, drawn sharp over it (placed in code). -->
+                        <Image x:Name="SharpPatch" Stretch="None" HorizontalAlignment="Left" VerticalAlignment="Top" UseLayoutRounding="False"
+                               RenderOptions.BitmapScalingMode="HighQuality" IsHitTestVisible="False" />
                         <!-- Canvas units are PDF points; this scale turns them into screen units (96 per inch). -->
                         <local:MarkupCanvas x:Name="MarkupLayer">
                             <local:MarkupCanvas.LayoutTransform>

@@ -78,15 +78,16 @@ public sealed class PdfRenderer
 
     /// <summary>
     /// Renders a page to BGRA pixels. scale 1 = 72 dpi. Without annotations it draws only the drawing itself (for comparing revisions).
-    /// With hairlines every line of the drawing is one pixel wide, whatever its line weight.
+    /// With hairlines every line of the drawing is one pixel wide, whatever its line weight. With an area, only that part
+    /// of the page is drawn, so a close zoom can be sharp without drawing the whole sheet that big.
     /// </summary>
-    public (byte[] BgraPixels, int Width, int Height) Render(int pageIndex, double scale, bool includeAnnotations = true, bool hairlines = false)
+    public (byte[] BgraPixels, int Width, int Height) Render(int pageIndex, double scale, bool includeAnnotations = true, bool hairlines = false, PixelArea? area = null)
     {
         lock (PdfiumLock)
         {
             int flags = includeAnnotations ? (int)RenderFlags.RenderAnnotations : 0;
             // shortcut: reopens the document for every render; keep it open if big files feel slow.
-            return hairlines ? VectorExtractor.RenderHairlines(_pdfBytes, pageIndex, scale, flags) : VectorExtractor.Render(_pdfBytes, pageIndex, scale, flags);
+            return hairlines ? VectorExtractor.RenderHairlines(_pdfBytes, pageIndex, scale, flags, area) : VectorExtractor.Render(_pdfBytes, pageIndex, scale, flags, area);
         }
     }
 }

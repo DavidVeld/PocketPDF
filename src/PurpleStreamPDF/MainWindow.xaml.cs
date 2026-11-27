@@ -15,7 +15,7 @@ namespace PurpleStreamPDF;
 public partial class MainWindow : Window
 {
     const double DipPerPoint = 96.0 / 72;
-    // shortcut: renders the whole page, capped at this many pixels (~160 MB), so A0/A1 go soft past ~250% zoom; upgrade to viewport tiles via PDFiumCore if that matters.
+    // The whole page is drawn at most this many pixels (~160 MB), so A0/A1 go soft past ~250% zoom: the part in view is then drawn sharp over it (SharpPatch).
     const double MaxPixels = 40_000_000;
 
     DocumentTab? _doc; // the document in view, otherwise null (the start screen)
@@ -23,6 +23,10 @@ public partial class MainWindow : Window
     int _renderVersion;
     Point? _panPreviousPosition;
     readonly DispatcherTimer _rerenderTimer = new() { Interval = TimeSpan.FromMilliseconds(200) };
+    // Once scrolling or zooming stops, the part in view is drawn sharp (see RenderSharpPatch).
+    readonly DispatcherTimer _sharpenTimer = new() { Interval = TimeSpan.FromMilliseconds(250) };
+    int _sharpVersion;
+    (PdfRenderer Pdf, int PageIndex, bool Hairlines)? _sharpPatchOf; // what the sharp patch shows
     readonly AppSettings _settings = AppSettings.Load();
     // One page render at a time, so zooming in steps doesn't queue full-page renders that are out of date before they start.
     readonly SemaphoreSlim _renderGate = new(1);
@@ -43,6 +47,8 @@ public partial class MainWindow : Window
         ShowRecentFiles();
         UpdateTitle(); // with the version
         _rerenderTimer.Tick += (_, _) => { _rerenderTimer.Stop(); RenderPage(); };
+        _sharpenTimer.Tick += (_, _) => { _sharpenTimer.Stop(); RenderSharpPatch(); };
+        Scroller.ScrollChanged += (_, _) => { _sharpenTimer.Stop(); _sharpenTimer.Start(); }; // also on zoom and window resize
         MarkupLayer.MarkupsChanged += () =>
         {
             _doc?.History.Commit(CurrentPageIndex);
@@ -1415,6 +1421,7 @@ public partial class MainWindow : Window
         var page = _doc.Loaded.Pages[pageIndex];
         double scale = DipPerPoint * Zoom.ScaleX * VisualTreeHelper.GetDpi(this).DpiScaleX;
         scale = Math.Min(scale, Math.Sqrt(MaxPixels / (page.ViewWidth * page.ViewHeight)));
+        RenderSharpPatch(); // first: it is the part in view, and much smaller than the page
         await _renderGate.WaitAsync();
         try
         {
@@ -1435,6 +1442,54 @@ public partial class MainWindow : Window
         finally
         {
             _renderGate.Release();
+        }
+    }
+
+    /// <summary>
+    /// Zoomed in past what the page image can hold (<see cref="MaxPixels"/>): draws the part of the page in view, and a
+    /// margin round it, at the full zoom over the page image. Otherwise, or for another page or file, the patch goes.
+    /// </summary>
+    async void RenderSharpPatch()
+    {
+        int version = ++_sharpVersion;
+        if (_doc is not { ComparePdf: null } doc || CurrentPageIndex < 0) // the compare overlay is drawn whole
+        {
+            SharpPatch.Source = null;
+            return;
+        }
+        var pdf = doc.Pdf;
+        int pageIndex = CurrentPageIndex;
+        bool hairlines = !LineWeightsMenuItem.IsChecked;
+        if (_sharpPatchOf != (pdf, pageIndex, hairlines)) SharpPatch.Source = null; // it shows something else: never leave it over this page
+        var page = doc.Loaded.Pages[pageIndex];
+        double scale = DipPerPoint * Zoom.ScaleX * VisualTreeHelper.GetDpi(this).DpiScaleX;
+        if (scale <= Math.Sqrt(MaxPixels / (page.ViewWidth * page.ViewHeight)) || Scroller.ViewportWidth <= 0)
+        {
+            SharpPatch.Source = null; // the page image is sharp at this zoom
+            return;
+        }
+        // The view in the page image's own units (points × DipPerPoint), a quarter of it more on each side so a short scroll stays sharp.
+        var view = PageImage.TransformToAncestor(Scroller).Inverse?.TransformBounds(new Rect(0, 0, Scroller.ViewportWidth, Scroller.ViewportHeight));
+        if (view is not { } inView) return;
+        inView.Inflate(inView.Width / 4, inView.Height / 4);
+        inView.Intersect(new Rect(0, 0, page.ViewWidth * DipPerPoint, page.ViewHeight * DipPerPoint));
+        if (inView.IsEmpty) return;
+        double pixelsPerUnit = scale / DipPerPoint;
+        int left = (int)Math.Floor(inView.Left * pixelsPerUnit), top = (int)Math.Floor(inView.Top * pixelsPerUnit);
+        var area = new PixelArea(left, top, (int)Math.Ceiling(inView.Right * pixelsPerUnit) - left, (int)Math.Ceiling(inView.Bottom * pixelsPerUnit) - top);
+        if (area.Width <= 0 || area.Height <= 0 || (double)area.Width * area.Height > MaxPixels) return;
+        try
+        {
+            var (pixels, width, height) = await Task.Run(() => pdf.Render(pageIndex, scale, hairlines: hairlines, area: area));
+            if (version != _sharpVersion) return; // the view moved on meanwhile
+            double bitmapDpi = 72 * scale; // as the page image: one bitmap pixel on one screen pixel
+            SharpPatch.Source = BitmapSource.Create(width, height, bitmapDpi, bitmapDpi, PixelFormats.Bgra32, null, pixels, width * 4);
+            SharpPatch.Margin = new Thickness(left / pixelsPerUnit, top / pixelsPerUnit, 0, 0);
+            _sharpPatchOf = (pdf, pageIndex, hairlines);
+        }
+        catch (Exception)
+        {
+            // Only sharper: the page image still shows the page, and reports render errors itself.
         }
     }
 
