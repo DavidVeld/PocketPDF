@@ -702,12 +702,12 @@
                         <TextBlock Style="{StaticResource ToolIcon}" Text="&#xE713;" FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-2,-3" />
                     </Grid>
                 </Button>
-                <Separator />
-                <Button x:Name="OverlapsButton" Click="OnFindOverlaps"
+                <!-- Check text overlaps and Place PDF or image are in the Tools menu only: these hidden buttons stay, as its items take their state and tips from them. -->
+                <Button x:Name="OverlapsButton" Click="OnFindOverlaps" Visibility="Collapsed"
                         ToolTip="Check text overlaps: puts a cloud (in the colour picked at the top) around text on this page that lines, arrows or fills run through. Clouds are normal markups: delete the ones you don't need, or undo them all at once">
                     <TextBlock Style="{StaticResource ToolIcon}" Text="&#xE9D5;" />
                 </Button>
-                <Button x:Name="PlaceSheetButton" Click="OnPlaceSheet"
+                <Button x:Name="PlaceSheetButton" Click="OnPlaceSheet" Visibility="Collapsed"
                         ToolTip="Place a PDF page or an image on this page, such as the architect's plan over the structure: see-through, in one colour if you like, clipped, and lined up on two points. Ctrl+V pastes a copied image or PDF file the same way">
                     <TextBlock Style="{StaticResource ToolIcon}" Text="&#xE8B9;" />
                 </Button>

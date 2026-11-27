@@ -69,8 +69,8 @@ Press a tool's key to pick it.
 | Mask | W | A white box without outline, to blank out part of the drawing. |
 | Measure | M | Distances, lengths along several points, and areas, to the sheet's scale. They clear on Esc or another tool. |
 | Calibrate | | Click both ends of a known length and type its real length: sets the scale. |
-| Check text overlaps | | Clouds text that lines, arrows or fills run through. |
-| Place PDF or image | | Puts a PDF page or an image on the page. A bar above the drawing sets its opacity, colour, clip and alignment; drag its edge to move it, a corner to resize it. |
+| Check text overlaps | | Clouds text that lines, arrows or fills run through. In the Tools menu only. |
+| Place PDF or image | | Puts a PDF page or an image on the page (Tools menu, or Ctrl+V a copied image or PDF file). A bar above the drawing sets its opacity, colour, clip and alignment; drag its edge to move it, a corner to resize it. |
 
 **CAD tools** (experimental, on once the sheet has a scale). Type sizes in real millimetres in the status bar.
 
