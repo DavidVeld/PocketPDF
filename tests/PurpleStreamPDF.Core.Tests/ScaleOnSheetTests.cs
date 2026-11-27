@@ -3,7 +3,7 @@ namespace PurpleStreamPDF.Core.Tests;
 public class ScaleOnSheetTests
 {
     /// <summary>Page text with each string written left to right from its point, 6 pt per character.</summary>
-    static PageText Sheet(params (string Text, double X, double Y)[] pieces) => new([.. pieces.SelectMany(piece =>
+    internal static PageText Sheet(params (string Text, double X, double Y)[] pieces) => new([.. pieces.SelectMany(piece =>
         piece.Text.Select((c, i) => new PageCharacter(c, new ViewRect(piece.X + i * 6, piece.Y, piece.X + i * 6 + 6, piece.Y + 10)))
             .Append(new PageCharacter('\n', default)))]);
 

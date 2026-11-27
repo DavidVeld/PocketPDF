@@ -524,6 +524,7 @@ public partial class MainWindow : Window
             var image = BitmapSource.Create(pixelWidth, pixelHeight, 96, 96, PixelFormats.Bgra32, null, pixels, pixelWidth * 4);
             image.Freeze();
             thumbnail.Image = image;
+            thumbnail.DrawingNumber = await Task.Run(() => DrawingNumber.FindOnSheet(pdf.GetText(pageIndex)));
         }
         catch (Exception)
         {

@@ -23,5 +23,17 @@ public sealed class PageThumbnail(int number) : INotifyPropertyChanged
         }
     }
 
+    /// <summary>The drawing number written on the sheet, shown under the page number; null when there is none.</summary>
+    public string? DrawingNumber
+    {
+        get => _drawingNumber;
+        set
+        {
+            _drawingNumber = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DrawingNumber)));
+        }
+    }
+    string? _drawingNumber;
+
     public event PropertyChangedEventHandler? PropertyChanged;
 }
