@@ -784,7 +784,10 @@
                     <DataTemplate DataType="local:PageThumbnail">
                         <StackPanel Margin="0,4" HorizontalAlignment="Center">
                             <Border Width="104" Height="104" Background="Transparent">
-                                <Image Source="{Binding Image}" Stretch="Uniform" Loaded="OnThumbnailShown" RenderOptions.BitmapScalingMode="HighQuality" />
+                                <!-- White behind the page, as in the main view: pages draw transparent, and dark mode would show through. -->
+                                <Border Background="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Image Source="{Binding Image}" Stretch="Uniform" Loaded="OnThumbnailShown" RenderOptions.BitmapScalingMode="HighQuality" />
+                                </Border>
                             </Border>
                             <TextBlock Text="{Binding Number}" HorizontalAlignment="Center" Margin="0,3,0,0" FontSize="12" />
                         </StackPanel>
