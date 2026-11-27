@@ -1048,7 +1048,7 @@ public sealed class MarkupCanvas : Canvas
         Select([dimension]);
         _editingMarkup = dimension;
         string oldText = dimension.LengthMm.ToString("0.#", System.Globalization.CultureInfo.CurrentCulture);
-        OpenTextEditor(Dimensioning.Shape(dimension, _page!).TextTopLeft, CadDimensionMarkup.TextSize, dimension.Color, dimension.Font, oldText, newText =>
+        OpenTextEditor(Dimensioning.Shape(dimension, _page!).TextTopLeft, dimension.TextSize, dimension.Color, dimension.Font, oldText, newText =>
         {
             if (newText == oldText || newText.Length == 0) return;
             if (DrawingScale.ParseLengthMm(newText) is not { } lengthMm)
@@ -1064,12 +1064,16 @@ public sealed class MarkupCanvas : Canvas
         Redraw();
     }
 
-    /// <summary>A dimension from <paramref name="start"/> to <paramref name="end"/>, its line through <paramref name="onLine"/>, in the current style and scale.</summary>
+    /// <summary>How new dimensions look, as set in Settings.</summary>
+    public DimensionStyle DimensionStyle { get; set; } = new();
+
+    /// <summary>A dimension from <paramref name="start"/> to <paramref name="end"/>, its line through <paramref name="onLine"/>, in the dimension style and current scale.</summary>
     CadDimensionMarkup NewDimension(ViewPoint start, ViewPoint end, ViewPoint onLine)
     {
         var dimension = new CadDimensionMarkup
         {
-            Start = _page!.ToPdf(start), End = _page.ToPdf(end), MmPerPoint = MmPerPoint, Color = CurrentColor, LineWidth = CurrentLineWidth, Font = CurrentFont,
+            Start = _page!.ToPdf(start), End = _page.ToPdf(end), MmPerPoint = MmPerPoint, Font = CurrentFont,
+            Color = DimensionStyle.Color, LineWidth = DimensionStyle.LineWidth, Ending = DimensionStyle.Ending, TextSize = DimensionStyle.TextSize,
         };
         dimension.Offset = dimension.OffsetTo(_page.ToPdf(onLine));
         return dimension;
@@ -2078,7 +2082,7 @@ public sealed class MarkupCanvas : Canvas
                 var value = new Border
                 {
                     Background = Brushes.Transparent, // clickable between the letters too
-                    Child = LabelText(dimension.ValueText, CadDimensionMarkup.TextSize, brush, dimension.Font),
+                    Child = LabelText(dimension.ValueText, dimension.TextSize, brush, dimension.Font),
                     RenderTransform = new RotateTransform(dimensionShape.TextAngle), // about its top-left corner, as in the saved file
                 };
                 SetLeft(value, dimensionShape.TextTopLeft.X);

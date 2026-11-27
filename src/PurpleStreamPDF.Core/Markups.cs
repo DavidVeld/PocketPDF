@@ -290,6 +290,10 @@ public sealed class LineMarkup : Markup
 public sealed class RectangleMarkup : Markup, IFillable
 {
     public const string MaskFill = "#FFFFFF";
+    /// <summary>The subject (/Subj) of the boxes the QA checks draw, so they can be cleared all at once.</summary>
+    public const string QaSubject = "QA check";
+
+    public static bool IsQaMarker(Markup markup) => markup is RectangleMarkup { Subject: QaSubject };
 
     public PdfPoint Corner1 { get; set; }
     public PdfPoint Corner2 { get; set; }

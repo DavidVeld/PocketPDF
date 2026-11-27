@@ -142,7 +142,7 @@ public static class Dimensioning
         else if (angle < -90) angle += 180;
         double radians = angle * Math.PI / 180, cos = Math.Cos(radians), sin = Math.Sin(radians);
         var (upX, upY) = (sin, -cos); // up for the text, in view space (Y down)
-        var (width, height) = TextLayout.Measure(dimension.ValueText, CadDimensionMarkup.TextSize, dimension.Font);
+        var (width, height) = TextLayout.Measure(dimension.ValueText, dimension.TextSize, dimension.Font);
         double centerX = (lineA.X + lineB.X) / 2 + upX * (TextGap + height / 2), centerY = (lineA.Y + lineB.Y) / 2 + upY * (TextGap + height / 2);
         var topLeft = new ViewPoint(centerX - cos * width / 2 + upX * height / 2, centerY - sin * width / 2 + upY * height / 2);
         ViewPoint[] corners =

@@ -203,7 +203,7 @@ public class CadTests
             new CadHatchMarkup { Boundary = [new(70, 10), new(90, 10), new(90, 50)], Pattern = HatchPattern.Crosshatch, Color = "#1E88E5" },
             new CadHatchMarkup { Boundary = [new(100, 10), new(120, 10), new(120, 50)], Pattern = HatchPattern.Solid, Color = "#43A047" },
             new CadDimensionMarkup { Start = new(10, 100), End = new(60, 130), Offset = -15, MmPerPoint = 20, Font = "Courier New" },
-            new CadDimensionMarkup { Start = new(100, 100), End = new(160, 100), Offset = 10, MmPerPoint = 5, Ending = LineEnding.Arrow },
+            new CadDimensionMarkup { Start = new(100, 100), End = new(160, 100), Offset = 10, MmPerPoint = 5, Ending = LineEnding.Arrow, TextSize = 11.5 },
         ];
         MarkupFile.Save(MarkupFile.Load(source.FilePath), new Dictionary<int, List<Markup>> { [1] = markups }, saved.FilePath);
 

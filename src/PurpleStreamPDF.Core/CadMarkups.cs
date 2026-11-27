@@ -48,8 +48,11 @@ public sealed class CadCircleMarkup : CadMarkup, IFillable
 /// </summary>
 public sealed class CadDimensionMarkup : CadMarkup
 {
-    /// <summary>Text height on paper, in points (about 2.8 mm).</summary>
-    public const double TextSize = 8;
+    /// <summary>Text height on paper of dimensions from files that don't say, in points (about 2.8 mm).</summary>
+    public const double DefaultTextSize = 8;
+
+    /// <summary>Text height on paper, in points.</summary>
+    public double TextSize { get; set; } = DefaultTextSize;
 
     public PdfPoint Start { get; set; }
     public PdfPoint End { get; set; }

@@ -120,6 +120,10 @@
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE749;" /></MenuItem.Icon>
                 </MenuItem>
                 <Separator />
+                <MenuItem Header="Se_ttings…" Click="OnSettings" ToolTip="The look of QA boxes, compare clouds and new dimensions">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE713;" /></MenuItem.Icon>
+                </MenuItem>
+                <Separator />
                 <MenuItem Header="E_xit" InputGestureText="Alt+F4" Click="OnExit">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE7E8;" /></MenuItem.Icon>
                 </MenuItem>
@@ -215,14 +219,24 @@
                     <MenuItem.Icon><Grid><TextBlock Style="{StaticResource MenuIcon}" Text="&#xED5E;" /><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE713;" FontSize="9" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-2,-3" /></Grid></MenuItem.Icon>
                 </MenuItem>
                 <Separator />
+                <!-- QA checks. Overlaps and spelling draw QA boxes (File ▸ Settings sets their look); Clear QA markers removes them. -->
+                <MenuItem x:Name="CompareMenuItem" Header="Com_pare with old revision…" Click="OnCompare"
+                          ToolTip="Overlay an old revision of this drawing: old in red, new in blue, unchanged in black">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8C8;" /></MenuItem.Icon>
+                </MenuItem>
                 <MenuItem Header="Check text _overlaps" Click="OnFindOverlaps" IsEnabled="{Binding IsEnabled, ElementName=OverlapsButton}"
                           ToolTip="{Binding ToolTip, ElementName=OverlapsButton}">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE9D5;" /></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Check spe_lling" Click="OnCheckSpelling" IsEnabled="{Binding IsEnabled, ElementName=OverlapsButton}"
-                          ToolTip="Puts a red box round the words on this page the Windows spell checker doesn't know, capitals included">
+                          ToolTip="Puts a QA box round the words on this page the Windows spell checker doesn't know, capitals included">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xF87B;" /></MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="Clear _QA markers" Click="OnClearQaMarkers" IsEnabled="{Binding IsEnabled, ElementName=OverlapsButton}"
+                          ToolTip="Removes the boxes the QA checks put on any page of this document, as one undo step">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE75C;" /></MenuItem.Icon>
+                </MenuItem>
+                <Separator />
                 <MenuItem Header="Place PDF or _image…" Click="OnPlaceSheet" IsEnabled="{Binding IsEnabled, ElementName=PlaceSheetButton}"
                           ToolTip="{Binding ToolTip, ElementName=PlaceSheetButton}">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8B9;" /></MenuItem.Icon>
@@ -236,11 +250,6 @@
                 </MenuItem>
                 <MenuItem Header="Rotate page 1_80°" Click="OnRotate180" IsEnabled="{Binding IsEnabled, ElementName=Rotate180Button}">
                     <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="M3.5,11 A6.5,6.5 0 0 1 16.5,10" StrokeThickness="1.4" /><Path Style="{StaticResource IconFill}" Data="M14,9 L19,9 L16.5,13 Z" /><TextBlock Text="180" FontSize="7" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,-1" /></Grid></Viewbox></MenuItem.Icon>
-                </MenuItem>
-                <Separator />
-                <MenuItem x:Name="CompareMenuItem" Header="Com_pare with old revision…" Click="OnCompare"
-                          ToolTip="Overlay an old revision of this drawing: old in red, new in blue, unchanged in black">
-                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8C8;" /></MenuItem.Icon>
                 </MenuItem>
                 <!-- Tool templates are hidden for now: drop the Visibility here and on the tool bar to bring them back. -->
                 <Separator Visibility="Collapsed" />
@@ -730,7 +739,7 @@
                 </Button>
                 <!-- Check text overlaps and Place PDF or image are in the Tools menu only: these hidden buttons stay, as its items take their state and tips from them. -->
                 <Button x:Name="OverlapsButton" Click="OnFindOverlaps" Visibility="Collapsed"
-                        ToolTip="Check text overlaps: puts a cloud (in the colour picked at the top) around text on this page that lines, arrows or fills run through. Clouds are normal markups: delete the ones you don't need, or undo them all at once">
+                        ToolTip="Check text overlaps: puts a QA box around text on this page that lines, arrows or fills run through. Delete the ones you don't need, undo them all at once, or remove them later with Clear QA markers">
                     <TextBlock Style="{StaticResource ToolIcon}" Text="&#xE9D5;" />
                 </Button>
                 <Button x:Name="PlaceSheetButton" Click="OnPlaceSheet" Visibility="Collapsed"

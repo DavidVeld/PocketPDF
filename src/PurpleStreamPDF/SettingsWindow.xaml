@@ -1,0 +1,81 @@
+<Window x:Class="PurpleStreamPDF.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings – PurpleStreamPDF" Width="480" SizeToContent="Height" ResizeMode="NoResize"
+        Icon="app.ico" WindowStartupLocation="CenterOwner" ShowInTaskbar="False" UseLayoutRounding="True">
+    <Window.Resources>
+        <Style x:Key="Heading" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,18,0,2" />
+        </Style>
+        <Style x:Key="Note" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+        </Style>
+        <Style x:Key="RowLabel" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,4,12,4" />
+        </Style>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="Margin" Value="0,4" />
+            <Setter Property="MinWidth" Value="140" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+        <Style x:Key="ColorButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Margin" Value="0,4" />
+            <Setter Property="MinWidth" Value="140" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+    </Window.Resources>
+    <StackPanel Margin="20,12,20,20">
+        <TextBlock Text="QA check boxes" Style="{StaticResource Heading}" />
+        <TextBlock Style="{StaticResource Note}"
+                   Text="Check text overlaps and Check spelling put these round what they find. Tools ▸ Clear QA markers removes them all." />
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition /></Grid.ColumnDefinitions>
+            <Grid.RowDefinitions><RowDefinition /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+            <TextBlock Text="Colour" Style="{StaticResource RowLabel}" />
+            <Button x:Name="QaColor" Grid.Column="1" Style="{StaticResource ColorButton}" Click="OnPickColor" />
+            <TextBlock Grid.Row="1" Text="Line weight" Style="{StaticResource RowLabel}" />
+            <ComboBox x:Name="QaLineWidth" Grid.Row="1" Grid.Column="1" />
+            <TextBlock Grid.Row="2" Text="Room round the text" Style="{StaticResource RowLabel}" />
+            <ComboBox x:Name="QaMargin" Grid.Row="2" Grid.Column="1" />
+        </Grid>
+
+        <TextBlock Text="Compare clouds" Style="{StaticResource Heading}" />
+        <TextBlock Style="{StaticResource Note}" Text="Put round each change found when comparing with an old revision." />
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition /></Grid.ColumnDefinitions>
+            <Grid.RowDefinitions><RowDefinition /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+            <TextBlock Text="Colour" Style="{StaticResource RowLabel}" />
+            <Button x:Name="DiffColor" Grid.Column="1" Style="{StaticResource ColorButton}" Click="OnPickColor" />
+            <TextBlock Grid.Row="1" Text="Line weight" Style="{StaticResource RowLabel}" />
+            <ComboBox x:Name="DiffLineWidth" Grid.Row="1" Grid.Column="1" />
+            <TextBlock Grid.Row="2" Text="Outline" Style="{StaticResource RowLabel}" />
+            <ComboBox x:Name="DiffOutline" Grid.Row="2" Grid.Column="1" />
+        </Grid>
+
+        <TextBlock Text="Dimensions" Style="{StaticResource Heading}" />
+        <TextBlock Style="{StaticResource Note}" Text="How new CAD dimensions look. Ones already drawn keep their look; select them to restyle them from the bar along the top." />
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="150" /><ColumnDefinition /></Grid.ColumnDefinitions>
+            <Grid.RowDefinitions><RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition /></Grid.RowDefinitions>
+            <TextBlock Text="Colour" Style="{StaticResource RowLabel}" />
+            <Button x:Name="DimensionColor" Grid.Column="1" Style="{StaticResource ColorButton}" Click="OnPickColor" />
+            <TextBlock Grid.Row="1" Text="Line weight" Style="{StaticResource RowLabel}" />
+            <ComboBox x:Name="DimensionLineWidth" Grid.Row="1" Grid.Column="1" />
+            <TextBlock Grid.Row="2" Text="Line ends" Style="{StaticResource RowLabel}" />
+            <ComboBox x:Name="DimensionEnding" Grid.Row="2" Grid.Column="1" />
+            <TextBlock Grid.Row="3" Text="Text size" Style="{StaticResource RowLabel}" />
+            <ComboBox x:Name="DimensionTextSize" Grid.Row="3" Grid.Column="1" />
+        </Grid>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="OK" IsDefault="True" Click="OnOk" MinWidth="80" Margin="0,0,8,0" Style="{DynamicResource AccentButtonStyle}" />
+            <Button Content="Cancel" IsCancel="True" MinWidth="80" />
+        </StackPanel>
+    </StackPanel>
+</Window>

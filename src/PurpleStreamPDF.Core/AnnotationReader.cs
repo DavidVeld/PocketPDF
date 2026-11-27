@@ -77,6 +77,7 @@ static partial class AnnotationReader
                 new CadDimensionMarkup
                 {
                     Start = start, End = end, Offset = cad.Elements.GetReal("/Offset"), MmPerPoint = cad.Elements.GetReal("/Scale"),
+                    TextSize = cad.Elements.ContainsKey("/TextSize") ? cad.Elements.GetReal("/TextSize") : CadDimensionMarkup.DefaultTextSize,
                     Ending = annotation.Elements.GetObject("/LE") is PdfArray { Elements.Count: > 0 } ends ? EndingOf(ends.Elements.GetName(0)) : LineEnding.Tick, // older files: ticks
                 },
             "/Hatch" when cad.Elements.GetObject("/Points") is PdfArray points && Points(points) is { Count: >= 3 } boundary =>

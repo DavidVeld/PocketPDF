@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.Json;
 using System.Windows.Data;
+using PurpleStreamPDF.Core;
 
 namespace PurpleStreamPDF;
 
@@ -43,6 +44,11 @@ public sealed class AppSettings
     static ToolTemplate Review(string name, string color) =>
         new() { Name = name, Tool = "CalloutTool", Styles = { ["ColorPicker"] = color, ["LineStylePicker"] = "Cloud" } };
     public List<string> RecentFiles { get; set; } = [];
+
+    // The styles set in Settings.
+    public QaBoxStyle QaBox { get; set; } = new();
+    public DiffCloudStyle DiffCloud { get; set; } = new();
+    public DimensionStyle Dimension { get; set; } = new();
 
     /// <summary>The saved settings, or defaults if there are none or the file is unreadable.</summary>
     public static AppSettings Load()
@@ -87,6 +93,33 @@ public sealed class ToolTemplate
     public string Tool { get; set; } = "";
     /// <summary>Each style picker's name and the tag of the item picked in it.</summary>
     public Dictionary<string, string> Styles { get; set; } = [];
+}
+
+/// <summary>The boxes the QA checks (text overlaps, spelling) put round what they find.</summary>
+public sealed class QaBoxStyle
+{
+    public string Color { get; set; } = "#E53935";
+    public double LineWidth { get; set; } = 1;
+    /// <summary>Room between the text and the box, in points.</summary>
+    public double Margin { get; set; } = 1.5;
+}
+
+/// <summary>The clouds Compare puts round the changes it finds.</summary>
+public sealed class DiffCloudStyle
+{
+    public string Color { get; set; } = "#E53935";
+    public double LineWidth { get; set; } = 1;
+    public AreaLineStyle Outline { get; set; } = AreaLineStyle.Cloud;
+}
+
+/// <summary>How new CAD dimensions look.</summary>
+public sealed class DimensionStyle
+{
+    public string Color { get; set; } = "#E53935";
+    public double LineWidth { get; set; } = 0.5;
+    public LineEnding Ending { get; set; } = LineEnding.Tick;
+    /// <summary>Text height on paper, in points.</summary>
+    public double TextSize { get; set; } = CadDimensionMarkup.DefaultTextSize;
 }
 
 /// <summary>Shows a path's file name or its folder, for the recent files list.</summary>

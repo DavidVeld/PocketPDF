@@ -313,7 +313,7 @@ static class AnnotationWriter
                     .. appearance.Leader(shape.Middle, shape.EndA, dimension.Ending, dimension.Color, dimension.LineWidth),
                     .. appearance.Leader(shape.Middle, shape.EndB, dimension.Ending, dimension.Color, dimension.LineWidth),
                 ];
-                appearance.Text(shape.TextTopLeft, dimension.ValueText, CadDimensionMarkup.TextSize, dimension.Color, dimension.Font, shape.TextAngle);
+                appearance.Text(shape.TextTopLeft, dimension.ValueText, dimension.TextSize, dimension.Color, dimension.Font, shape.TextAngle);
 
                 drawnArea = ViewRect.Around([.. shape.Lines.SelectMany(line => new[] { line.A, line.B }), .. ends, .. shape.TextCorners]).Inflate(dimension.LineWidth);
                 annotation.Elements["/Subtype"] = new PdfName("/Line");
@@ -327,6 +327,7 @@ static class AnnotationWriter
                     {
                         ["/Kind"] = new PdfName("/Dimension"), ["/Points"] = Numbers(document, [dimension.Start, dimension.End]),
                         ["/Offset"] = new PdfReal(dimension.Offset), ["/Scale"] = new PdfReal(dimension.MmPerPoint),
+                        ["/TextSize"] = new PdfReal(dimension.TextSize),
                     },
                 };
                 break;

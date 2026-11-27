@@ -26,8 +26,9 @@ are down the right, and pages, snap and its settings, zoom and the drawing scale
   the CAD dimension tool for dimensions that stay on the sheet). Points snap to the drawing's line ends, crossings, circle centres and midpoints,
   square off the last point placed (perpendicular), and to the corners, edges, circle centres and quarter points of the
   markups and CAD lines drawn on it. The button next to Snap in the status bar picks which of these are on.
-- **Check text overlaps**: clouds every piece of text on the page that lines, arrows or fills run through.
-- **Check spelling**: puts a red box round the words on the page that aren't in the dictionary, text in capitals included.
+- **QA checks**: *Check text overlaps* boxes every piece of text on the page that lines, arrows or fills run through;
+  *Check spelling* boxes the words that aren't in the dictionary, text in capitals included. *Clear QA markers*
+  removes these boxes from the whole document in one go. Their look is set in File ▸ Settings.
 - **Placed sheets**: put a page of another PDF, or an image, on the drawing, such as the architect's plan over the
   structure. Its white paper is see-through; set its opacity, draw it all in one colour, clip it to a rectangle, and
   line it up by clicking two grid crossings on it and the same two on the drawing. Ctrl+V pastes a copied image or
@@ -35,7 +36,9 @@ are down the right, and pages, snap and its settings, zoom and the drawing scale
 - **CAD tools** (experimental, once the sheet has a scale): line, polyline, rectangle, circle, offset, trim,
   hatch, dimension and join, with sizes typed in real millimetres. They sit on their own CAD layer.
 - **Compare**: overlay an old revision (old in red, new in blue), line the two up on two points, put clouds
-  round every change, and export the overlay or carry on marking it up.
+  round every change (in the style set in File ▸ Settings), and export the overlay or carry on marking it up.
+- **Settings** (File ▸ Settings): the colour, line weight and other looks of QA boxes, compare clouds and new
+  CAD dimensions.
 - **Tabs**: several documents open at once, each with its own undo history, page, zoom, scale and compare.
   PDFs opened together from Explorer, or while PurpleStreamPDF is open, all go into tabs of the one window.
 - **Pages**: the page list, and first / previous / next / last buttons in the status bar, where you can also
@@ -71,8 +74,9 @@ Press a tool's key to pick it.
 | Mask | W | A white box without outline, to blank out part of the drawing. |
 | Measure | M | Distances, lengths along several points, and areas, to the sheet's scale. They clear on Esc or another tool. |
 | Calibrate | | Click both ends of a known length and type its real length: sets the scale. |
-| Check text overlaps | | Clouds text that lines, arrows or fills run through. In the Tools menu only. |
-| Check spelling | | Puts a red box round the words on the page that the Windows spell checker doesn't know, text in capitals included (it uses the dictionary of your Windows language). Words touching a number (150mm, S355) and short abbreviations (TBC, MEP) are skipped. In the Tools menu only. |
+| Check text overlaps | | Puts a QA box round text that lines, arrows or fills run through. In the Tools menu only. |
+| Check spelling | | Puts a QA box round the words on the page that the Windows spell checker doesn't know, text in capitals included (it uses the dictionary of your Windows language). Words touching a number (150mm, S355) and short abbreviations (TBC, MEP) are skipped. In the Tools menu only. |
+| Clear QA markers | | Removes the boxes the QA checks put on any page of the document, as one undo step. Other markups stay. In the Tools menu only. |
 | Place PDF or image | | Puts a PDF page or an image on the page (Tools menu, or Ctrl+V a copied image or PDF file). A bar above the drawing sets its opacity, colour, clip and alignment; drag its edge to move it, a corner to resize it. |
 
 **CAD tools** (experimental, on once the sheet has a scale). Type sizes in real millimetres in the status bar.
@@ -86,7 +90,7 @@ Press a tool's key to pick it.
 | Offset | Copies a CAD line or circle, or a line of the drawing itself (a dashed gridline whole), to one side at the typed distance. |
 | Trim | Cuts away the piece of a CAD line up to the lines crossing it, or drag a window from empty space to trim every line its edge crosses. Hold Shift to extend instead: the clicked end (or each line the window crosses) runs on to the next line, or to the page edge. Trim and offset show a small square pick cursor. |
 | Hatch | Fills a region closed off by CAD lines, as hatch, crosshatch or solid, in the fill colour. |
-| Dimension | Two points, then where the dimension line goes: drawn as in CAD, with ticks and the length above. Double-click it (Select tool) and type a new length: a shape both ends sit on stretches (a circle grows), a shape only the far end sits on moves, and dimensions on them follow. Changing the scale asks whether to update dimensions to it; No keeps their values, and new dimensions use the new scale. |
+| Dimension | Two points, then where the dimension line goes: drawn as in CAD, with ticks and the length above, in the dimension style set in File ▸ Settings. Double-click it (Select tool) and type a new length: a shape both ends sit on stretches (a circle grows), a shape only the far end sits on moves, and dimensions on them follow. Changing the scale asks whether to update dimensions to it; No keeps their values, and new dimensions use the new scale. |
 | Join | Joins the selected CAD lines into one polyline with clean corners. |
 
 ### Style of new markups
@@ -103,10 +107,10 @@ The bar along the top sets how new markups look. With markups selected, it chang
 
 | Menu | Has |
 | --- | --- |
-| File | New sheet, Open, Save, Save as, Close, Print, Exit |
+| File | New sheet, Open, Open recent, Save, Save as, Close, Print, Settings, Exit |
 | Edit | Undo, Redo, Copy, Paste, Paste in place, Delete, Select all |
 | View | Line weights (off draws every line of the drawing one pixel wide), Sharp close zoom (zoomed in close on a big sheet, redraws the part in view sharp), Show CAD layer, Dark mode |
-| Tools | Every drawing tool, Calibrate, Check text overlaps, Check spelling, Place PDF or image, Rotate page, Compare with old revision |
+| Tools | Every drawing tool, Calibrate; the QA checks (Compare with old revision, Check text overlaps, Check spelling, Clear QA markers); Place PDF or image, Rotate page |
 | CAD tools | The CAD tools and Join |
 | Help | Show me the tricks, add or remove *Combine PDFs* in the Explorer menu, Check for updates, About |
 

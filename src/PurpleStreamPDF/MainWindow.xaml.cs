@@ -406,6 +406,7 @@ public partial class MainWindow : Window
         MarkupLayer.SnapKinds = Enum.GetValues<SnapKind>().Where(kind => !_settings.SnapsOff.Contains(kind.ToString())).ToHashSet();
         LineWeightsMenuItem.IsChecked = _settings.LineWeights;
         SharpZoomMenuItem.IsChecked = _settings.SharpZoom;
+        MarkupLayer.DimensionStyle = _settings.Dimension; // the same object: Settings changes it in place
         DarkModeMenuItem.IsChecked = _settings.DarkMode ?? App.WindowsUsesDarkMode();
         SelectByTag(ShapePicker, tag => tag == _settings.AreaShape);
         SelectByTag(LineStylePicker, tag => tag == _settings.AreaOutline);
@@ -1750,8 +1751,9 @@ public partial class MainWindow : Window
             markups.Add(new CloudMarkup
             {
                 Vertices = area.Corners().Select(page.ToPdf).ToList(),
-                Color = MarkupLayer.CurrentColor,
-                LineWidth = MarkupLayer.CurrentLineWidth,
+                Color = _settings.DiffCloud.Color,
+                LineWidth = _settings.DiffCloud.LineWidth,
+                Style = _settings.DiffCloud.Outline,
             });
         MarkupLayer.ShowPage(page, markups);
         LoadToolData(); // ShowPage drops the page text and line work
@@ -1762,7 +1764,7 @@ public partial class MainWindow : Window
         CompareLegend.Text = _doc.CompareLegendText + $"   Added {changedAreas.Count} cloud{(changedAreas.Count == 1 ? "" : "s")}";
     }
 
-    /// <summary>Clouds the text on this page that lines or fills run through, like auto-cloud does for changes.</summary>
+    /// <summary>Boxes the text on this page that lines or fills run through.</summary>
     async void OnFindOverlaps(object sender, RoutedEventArgs e)
     {
         if (_doc?.Pdf is not { } pdf || _doc.Loaded is not { } loaded || CurrentPageIndex < 0 || _doc.ComparePdf != null || IsViewOnly) return;
@@ -1803,19 +1805,56 @@ public partial class MainWindow : Window
             MessageBox.Show(this, $"No text overlaps found on page {pageIndex + 1}.", "PurpleStreamPDF");
             return;
         }
-        var markups = loaded.MarkupsByPage[pageIndex];
-        foreach (var area in overlaps)
-            markups.Add(new CloudMarkup
+        // The finder pads each area to join a word's letters: take that back off, so the box sits as close as the spelling's.
+        AddQaBoxes(pageIndex, overlaps.Select(area => area.Inflate(-OverlapFinder.Padding)));
+        NoticeStatus.Text = $"Boxed {overlaps.Count} text overlap{(overlaps.Count == 1 ? "" : "s")}: delete any you don't need, undo them all, or Tools ▸ Clear QA markers";
+    }
+
+    /// <summary>QA boxes, in the style set in Settings, round these areas of the current page (tight round what was found), as one undo step.</summary>
+    void AddQaBoxes(int pageIndex, IEnumerable<ViewRect> areas)
+    {
+        var page = _doc!.Loaded!.Pages[pageIndex];
+        var style = _settings.QaBox;
+        foreach (var area in areas)
+        {
+            var edge = area.Inflate(style.Margin);
+            _doc.Loaded.MarkupsByPage[pageIndex].Add(new RectangleMarkup
             {
-                Vertices = area.Corners().Select(page.ToPdf).ToList(),
-                Color = MarkupLayer.CurrentColor,
-                LineWidth = MarkupLayer.CurrentLineWidth,
+                Corner1 = page.ToPdf(new ViewPoint(edge.Left, edge.Top)),
+                Corner2 = page.ToPdf(new ViewPoint(edge.Right, edge.Bottom)),
+                Color = style.Color,
+                LineWidth = style.LineWidth,
+                Subject = RectangleMarkup.QaSubject,
             });
-        MarkupLayer.ShowPage(page, markups);
-        LoadToolData(); // ShowPage drops the page text and line work
-        _doc.History.Commit(pageIndex); // all clouds of one click are one undo step
-        UpdateUndoState();
-        NoticeStatus.Text = $"Clouded {overlaps.Count} text overlap{(overlaps.Count == 1 ? "" : "s")}: delete any you don't need, or undo them all";
+        }
+        CommitPages([pageIndex]);
+    }
+
+    /// <summary>Removes the QA boxes from every page of the document, as one undo step.</summary>
+    void OnClearQaMarkers(object sender, RoutedEventArgs e)
+    {
+        if (_doc?.Loaded is not { } loaded || !CanEditMarkups) return;
+        MarkupLayer.FinishTextEditing();
+        int removed = 0;
+        var pages = new List<int>();
+        foreach (var (pageIndex, markups) in loaded.MarkupsByPage)
+            if (markups.RemoveAll(RectangleMarkup.IsQaMarker) is > 0 and var count)
+            {
+                removed += count;
+                pages.Add(pageIndex);
+            }
+        if (removed == 0)
+        {
+            NoticeStatus.Text = "No QA markers in this document";
+            return;
+        }
+        CommitPages(pages);
+        NoticeStatus.Text = $"Removed {removed} QA marker{(removed == 1 ? "" : "s")} from {pages.Count} page{(pages.Count == 1 ? "" : "s")}";
+    }
+
+    void OnSettings(object sender, RoutedEventArgs e)
+    {
+        if (new SettingsWindow(_settings) { Owner = this }.ShowDialog() == true) _settings.Save();
     }
 
     /// <summary>Boxes the words on this page that the Windows spell checker doesn't know.</summary>
@@ -1824,7 +1863,6 @@ public partial class MainWindow : Window
         if (_doc?.Pdf is not { } pdf || _doc.Loaded is not { } loaded || CurrentPageIndex < 0 || _doc.ComparePdf != null || IsViewOnly) return;
         MarkupLayer.FinishTextEditing();
         int pageIndex = CurrentPageIndex;
-        var page = loaded.Pages[pageIndex];
         List<(string Word, ViewRect Box)> misspelt;
         Mouse.OverrideCursor = Cursors.Wait;
         try
@@ -1857,22 +1895,7 @@ public partial class MainWindow : Window
             MessageBox.Show(this, $"No spelling mistakes found on page {pageIndex + 1}.", "PurpleStreamPDF");
             return;
         }
-        var markups = loaded.MarkupsByPage[pageIndex];
-        foreach (var (_, box) in misspelt)
-        {
-            var edge = box.Inflate(1.5); // a tight red box round the word, clear of its letters
-            markups.Add(new RectangleMarkup
-            {
-                Corner1 = page.ToPdf(new ViewPoint(edge.Left, edge.Top)),
-                Corner2 = page.ToPdf(new ViewPoint(edge.Right, edge.Bottom)),
-                Color = "#E53935",
-                LineWidth = 1,
-            });
-        }
-        MarkupLayer.ShowPage(page, markups);
-        LoadToolData(); // ShowPage drops the page text and line work
-        _doc.History.Commit(pageIndex); // all clouds of one click are one undo step
-        UpdateUndoState();
+        AddQaBoxes(pageIndex, misspelt.Select(found => found.Box));
         var words = misspelt.Select(found => found.Word).Distinct().ToList();
         NoticeStatus.Text = $"Boxed {misspelt.Count} word{(misspelt.Count == 1 ? "" : "s")} not in the dictionary: "
             + string.Join(", ", words.Take(8)) + (words.Count > 8 ? "…" : "") + ". Delete any that are right, or undo them all";
