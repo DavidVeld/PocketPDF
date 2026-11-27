@@ -102,7 +102,7 @@ The bar along the top sets how new markups look. With markups selected, it chang
 | --- | --- |
 | File | New sheet, Open, Save, Save as, Close, Print, Exit |
 | Edit | Undo, Redo, Copy, Paste, Paste in place, Delete, Select all |
-| View | Line weights (off draws every line of the drawing one pixel wide), Show CAD layer, Dark mode |
+| View | Line weights (off draws every line of the drawing one pixel wide), Sharp close zoom (zoomed in close on a big sheet, redraws the part in view sharp), Show CAD layer, Dark mode |
 | Tools | Every drawing tool, Calibrate, Check text overlaps, Place PDF or image, Rotate page, Compare with old revision |
 | CAD tools | The CAD tools and Join |
 | Help | Show me the tricks, add or remove *Combine PDFs* in the Explorer menu, Check for updates, About |

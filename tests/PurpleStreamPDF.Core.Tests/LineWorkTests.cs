@@ -30,7 +30,7 @@ public class LineWorkTests
     [InlineData(0, false, 100, 600)] // round the rectangle and the bottom line
     [InlineData(90, false, 30, 100)] // the same, turned: the line runs down the left
     [InlineData(0, true, 100, 600)]
-    public void An_area_draws_the_same_pixels_as_that_part_of_the_whole_page(int rotation, bool hairlines, int left, int top)
+    public void An_area_draws_that_part_of_the_whole_page_on_white(int rotation, bool hairlines, int left, int top)
     {
         using var pdf = TestPdf.CreateWithLineWork(rotation);
         var renderer = new PdfRenderer(File.ReadAllBytes(pdf.FilePath));
@@ -40,10 +40,23 @@ public class LineWorkTests
         var part = renderer.Render(0, scale: 3, hairlines: hairlines, area: area);
 
         Assert.Equal((area.Width, area.Height), (part.Width, part.Height));
+        int inked = 0;
         for (int row = 0; row < area.Height; row++)
-            Assert.Equal(whole.BgraPixels.AsSpan(((area.Top + row) * whole.Width + area.Left) * 4, area.Width * 4).ToArray(),
-                part.BgraPixels.AsSpan(row * area.Width * 4, area.Width * 4).ToArray());
-        Assert.Contains(part.BgraPixels, value => value != 0); // the area has some of the drawing in it, not only background
+            for (int column = 0; column < area.Width; column++)
+            {
+                var expected = whole.BgraPixels.AsSpan(((area.Top + row) * whole.Width + area.Left + column) * 4, 4);
+                var actual = part.BgraPixels.AsSpan((row * area.Width + column) * 4, 4);
+                Assert.Equal(255, actual[3]); // opaque: drawn over the softer page image, which mustn't show through
+                if (expected[3] == 0)
+                {
+                    Assert.Equal([255, 255, 255, 255], actual.ToArray()); // blank sheet: white
+                    continue;
+                }
+                inked++;
+                if (expected[3] == 255) Assert.Equal(expected.ToArray(), actual.ToArray()); // solid ink: the same
+                else Assert.NotEqual([255, 255, 255, 255], actual.ToArray()); // a line's soft edge (or a hairline): still shows
+            }
+        Assert.True(inked > 0); // the area has some of the drawing in it, not only sheet
     }
 
     [Theory]

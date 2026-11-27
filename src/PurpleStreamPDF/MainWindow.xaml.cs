@@ -405,6 +405,7 @@ public partial class MainWindow : Window
         SnapToggle.IsChecked = MarkupLayer.SnapEnabled = _settings.Snap;
         MarkupLayer.SnapKinds = Enum.GetValues<SnapKind>().Where(kind => !_settings.SnapsOff.Contains(kind.ToString())).ToHashSet();
         LineWeightsMenuItem.IsChecked = _settings.LineWeights;
+        SharpZoomMenuItem.IsChecked = _settings.SharpZoom;
         DarkModeMenuItem.IsChecked = _settings.DarkMode ?? App.WindowsUsesDarkMode();
         SelectByTag(ShapePicker, tag => tag == _settings.AreaShape);
         SelectByTag(LineStylePicker, tag => tag == _settings.AreaOutline);
@@ -431,6 +432,7 @@ public partial class MainWindow : Window
         _settings.PagesPanelOpen = PagesToggle.IsChecked == true;
         _settings.Snap = SnapToggle.IsChecked == true;
         _settings.LineWeights = LineWeightsMenuItem.IsChecked;
+        _settings.SharpZoom = SharpZoomMenuItem.IsChecked;
         _settings.AreaShape = (string)((FrameworkElement)ShapePicker.SelectedItem).Tag;
         _settings.AreaOutline = (string)((FrameworkElement)LineStylePicker.SelectedItem).Tag;
         _settings.HatchPattern = (string)((FrameworkElement)HatchPicker.SelectedItem).Tag;
@@ -1409,6 +1411,8 @@ public partial class MainWindow : Window
 
     void OnLineWeightsToggled(object sender, RoutedEventArgs e) => RenderPage();
 
+    void OnSharpZoomToggled(object sender, RoutedEventArgs e) => RenderSharpPatch(); // draws the part in view, or takes it away
+
     async void RenderPage()
     {
         if (_doc == null || CurrentPageIndex < 0) return;
@@ -1452,7 +1456,7 @@ public partial class MainWindow : Window
     async void RenderSharpPatch()
     {
         int version = ++_sharpVersion;
-        if (_doc is not { ComparePdf: null } doc || CurrentPageIndex < 0) // the compare overlay is drawn whole
+        if (!SharpZoomMenuItem.IsChecked || _doc is not { ComparePdf: null } doc || CurrentPageIndex < 0) // switched off; the compare overlay is drawn whole
         {
             SharpPatch.Source = null;
             return;

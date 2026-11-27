@@ -27,6 +27,8 @@ public sealed class AppSettings
     public List<string> SnapsOff { get; set; } = [];
     /// <summary>False shows the drawing's lines one pixel wide.</summary>
     public bool LineWeights { get; set; } = true;
+    /// <summary>Zoomed in past the page image's size, the part in view is drawn sharp.</summary>
+    public bool SharpZoom { get; set; } = true;
     /// <summary>Shape and outline of new callouts and clouds, as the pickers' tags.</summary>
     public string AreaShape { get; set; } = "Box";
     public string AreaOutline { get; set; } = "Cloud";

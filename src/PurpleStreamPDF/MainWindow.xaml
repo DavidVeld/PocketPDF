@@ -158,6 +158,10 @@
                           ToolTip="Off draws every line of the drawing one pixel wide, for easier reading. Markups, printing and saved files keep their line weights.">
                     <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="M3,4.5 H17" /><Path Style="{StaticResource IconLine}" Data="M3,10 H17" StrokeThickness="2" /><Path Style="{StaticResource IconLine}" Data="M3,15.5 H17" StrokeThickness="3" /></Grid></Viewbox></MenuItem.Icon>
                 </MenuItem>
+                <MenuItem x:Name="SharpZoomMenuItem" Header="_Sharp close zoom" IsCheckable="True" IsChecked="True" Click="OnSharpZoomToggled"
+                          ToolTip="Zoomed in close on a big sheet, redraws the part in view sharp once you stop scrolling or zooming. Off keeps the softer whole-page image, which uses less time and memory">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE71E;" /></MenuItem.Icon>
+                </MenuItem>
                 <MenuItem x:Name="CadLayerMenuItem" Header="Show CAD _layer" IsCheckable="True" IsChecked="True" Click="OnCadLayerToggled"
                           ToolTip="Shows or hides everything drawn with the CAD tools. It is saved on its own layer named CAD, which other viewers can switch too">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE81E;" /></MenuItem.Icon>

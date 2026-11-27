@@ -80,7 +80,8 @@ public static class VectorExtractor
         if (bitmap == IntPtr.Zero) throw new OutOfMemoryException("Not enough memory to draw the page.");
         try
         {
-            Native.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, 0);
+            // An area is drawn over the page image, so it is opaque white like the sheet: see-through, the softer page would show round each line.
+            Native.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, area == null ? 0u : 0xFFFFFFFFu);
             // The whole page, shifted so the area lands on the bitmap: PDFium draws only what falls inside it.
             Native.FPDF_RenderPageBitmap(bitmap, page, -left, -top, pageWidth, pageHeight, 0, flags);
             var buffer = Native.FPDFBitmap_GetBuffer(bitmap);
