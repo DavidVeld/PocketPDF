@@ -163,6 +163,7 @@ public sealed class MarkupCanvas : Canvas
     /// <summary>Shift or Ctrl went down or up: the point under the cursor snaps differently, though the mouse didn't move.</summary>
     public void RefreshCursor()
     {
+        ShowSelectionCursor();
         if (_page == null || _rawMousePosition is not { } raw || _cadPoints.Count == 0) return;
         _mousePosition = UsesSnapping ? Snapped(raw, LastDrawnPoint) : raw;
         Redraw();
@@ -177,6 +178,16 @@ public sealed class MarkupCanvas : Canvas
         _selection.AddRange(selected);
         SelectionChanged?.Invoke();
         Redraw();
+        ShowSelectionCursor();
+    }
+
+    /// <summary>Select tool with Shift held: + over a markup a click adds to the selection, - over one it takes out.</summary>
+    void ShowSelectionCursor()
+    {
+        if (Tool != MarkupTool.Select) return;
+        Cursor = Keyboard.Modifiers == ModifierKeys.Shift && SelectedSheet == null && Mouse.DirectlyOver is { } over && TagOf(over) is Markup markup
+            ? _selection.Contains(markup) ? RemoveFromSelectionCursor : AddToSelectionCursor
+            : null;
     }
 
     public void SelectAll() => Select(VisibleMarkups);
@@ -234,6 +245,8 @@ public sealed class MarkupCanvas : Canvas
                 MarkupTool.Pen => PenCursor,
                 MarkupTool.Highlight => HighlightCursor,
                 MarkupTool.Measure => MeasureCursor,
+                MarkupTool.Cloud => CloudCursor,
+                MarkupTool.Tag => TagCursor,
                 _ => null,
             };
             Redraw();
@@ -658,6 +671,7 @@ public sealed class MarkupCanvas : Canvas
         if (rawPosition == _rawMousePosition) return;
         _rawMousePosition = rawPosition;
         _mousePosition = rawPosition;
+        ShowSelectionCursor();
         var previousMarker = _snapMarker;
         if (UsesSnapping && _dragPreviousPosition == null) _mousePosition = Snapped(_mousePosition, LastDrawnPoint);
         else _snapMarker = null;
@@ -1537,30 +1551,54 @@ public sealed class MarkupCanvas : Canvas
         return CursorFromPixels(pixels, Middle, Middle);
     }
 
-    // Pen, highlight and measure: a crosshair with the tool's own tool bar icon beside it, so it's plain which tool is on.
-    static readonly Cursor PenCursor = CreateGlyphCursor("");
-    static readonly Cursor HighlightCursor = CreateGlyphCursor("");
-    static readonly Cursor MeasureCursor = CreateGlyphCursor("");
+    // Drawing tools show a crosshair with the tool's own tool bar icon beside it, so it's plain which tool is on;
+    // Shift in the Select tool shows the arrow with + or -, for what a click does to the selection.
+    static readonly Geometry Crosshair = Geometry.Parse("M7.5,0 V15 M0,7.5 H15");
+    static readonly Geometry Arrow = Geometry.Parse("M1.5,1.5 V17 L5,13.5 L8,20 L10.5,19 L7.5,12.5 H12.5 Z");
+    const int CrosshairHot = 7, ArrowHot = 1;
+    static readonly Cursor PenCursor = CreateCursor(CrosshairHot, (Crosshair, null), (Glyph(""), Brushes.Black));
+    static readonly Cursor HighlightCursor = CreateCursor(CrosshairHot, (Crosshair, null), (Glyph(""), Brushes.Black));
+    static readonly Cursor MeasureCursor = CreateCursor(CrosshairHot, (Crosshair, null), (Glyph(""), Brushes.Black));
+    static readonly Cursor CloudCursor = CreateCursor(CrosshairHot, (Crosshair, null), (ToolBarIcon( // the tool bar's IconCloud
+        "M15.54,12.3 A2.76,2.76 0 1 1 12.3,15.54 A2.76,2.76 0 1 1 7.7,15.54 A2.76,2.76 0 1 1 4.46,12.3 A2.76,2.76 0 1 1 4.46,7.7 A2.76,2.76 0 1 1 7.7,4.46 A2.76,2.76 0 1 1 12.3,4.46 A2.76,2.76 0 1 1 15.54,7.7 A2.76,2.76 0 1 1 15.54,12.3 Z"), null));
+    static readonly Cursor TagCursor = CreateCursor(CrosshairHot, (Crosshair, null), // the tool bar's IconLabel, IconTagLeader and IconTagArrow
+        (ToolBarIcon("M1.5,1.5 H9.5 V6.5 H1.5 Z M7,7 L15.7,15.7"), null), (ToolBarIcon("M18,18 V14 L14,18 Z"), Brushes.Black));
+    static readonly Cursor AddToSelectionCursor = CreateCursor(ArrowHot, (Arrow, Brushes.White), (Glyph(""), Brushes.Black));
+    static readonly Cursor RemoveFromSelectionCursor = CreateCursor(ArrowHot, (Arrow, Brushes.White), (Glyph(""), Brushes.Black));
 
-    static Cursor CreateGlyphCursor(string glyph)
+    static Geometry Moved(Geometry shape, double x, double y)
     {
-        const int Size = 32, Hot = 7;
+        var moved = shape.Clone();
+        moved.Transform = new TranslateTransform(x, y);
+        return moved;
+    }
+
+    /// <summary>A tool bar icon (drawn in a 20 x 20 box), in the bottom-right of the cursor.</summary>
+    static Geometry ToolBarIcon(string data) => Moved(Geometry.Parse(data), 12, 12);
+
+    /// <summary>An icon font glyph, centred in the bottom-right quarter of the cursor.</summary>
+    static Geometry Glyph(string glyph)
+    {
+        var shape = new FormattedText(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+            new Typeface("Segoe Fluent Icons, Segoe MDL2 Assets"), 15, Brushes.Black, 1).BuildGeometry(new Point());
+        var bounds = shape.Bounds;
+        return Moved(shape, 23 - bounds.X - bounds.Width / 2, 23 - bounds.Y - bounds.Height / 2);
+    }
+
+    /// <summary>
+    /// A cursor of black lines (fill null) and shapes (fill black), edged in white so they show on dark lines too,
+    /// and white shapes outlined in black like the usual arrow.
+    /// </summary>
+    static Cursor CreateCursor(int hot, params (Geometry Shape, Brush? Fill)[] parts)
+    {
+        const int Size = 32;
         var visual = new DrawingVisual();
         using (var drawing = visual.RenderOpen())
         {
-            var halo = new Pen(Brushes.White, 3);
-            foreach (var pen in new[] { halo, new Pen(Brushes.Black, 1) }) // black, edged in white so it shows on dark lines too
-            {
-                drawing.DrawLine(pen, new Point(Hot + 0.5, 0), new Point(Hot + 0.5, 2 * Hot + 1));
-                drawing.DrawLine(pen, new Point(0, Hot + 0.5), new Point(2 * Hot + 1, Hot + 0.5));
-            }
-            var icon = new FormattedText(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                new Typeface("Segoe Fluent Icons, Segoe MDL2 Assets"), 15, Brushes.Black, 1).BuildGeometry(new Point());
-            var bounds = icon.Bounds;
-            drawing.PushTransform(new TranslateTransform(23 - bounds.X - bounds.Width / 2, 23 - bounds.Y - bounds.Height / 2)); // centred in the bottom-right quarter
-            drawing.DrawGeometry(Brushes.White, halo, icon);
-            drawing.DrawGeometry(Brushes.Black, null, icon);
-            drawing.Pop();
+            // Round joins, as the tool bar icons have: the cloud's sharp corners would spike out with mitred ones.
+            var (halo, ink) = (new Pen(Brushes.White, 3) { LineJoin = PenLineJoin.Round }, new Pen(Brushes.Black, 1) { LineJoin = PenLineJoin.Round });
+            foreach (var (shape, fill) in parts) if (fill != Brushes.White) drawing.DrawGeometry(null, halo, shape);
+            foreach (var (shape, fill) in parts) drawing.DrawGeometry(fill, fill == Brushes.Black ? null : ink, shape);
         }
         var bitmap = new RenderTargetBitmap(Size, Size, 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(visual);
@@ -1568,7 +1606,7 @@ public sealed class MarkupCanvas : Canvas
         new FormatConvertedBitmap(bitmap, PixelFormats.Bgra32, null, 0).CopyPixels(rows, Size * 4, 0); // a .cur wants straight alpha
         var pixels = new byte[rows.Length];
         for (int y = 0; y < Size; y++) Array.Copy(rows, y * Size * 4, pixels, (Size - 1 - y) * Size * 4, Size * 4); // a .cur keeps the bottom row first
-        return CursorFromPixels(pixels, Hot, Hot);
+        return CursorFromPixels(pixels, hot, hot);
     }
 
     /// <summary>A cursor from 32 x 32 BGRA pixels, bottom row first, with the hot spot at (x, y) from the top left.</summary>
