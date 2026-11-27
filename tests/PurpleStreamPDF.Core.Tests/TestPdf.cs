@@ -52,7 +52,7 @@ sealed class TestPdf : IDisposable
     /// One 400 x 400 page with a text box written by "another viewer" the way a desktop viewer does it: with rich text, a subject,
     /// a custom column, a pop-up and a reply. PurpleStreamPDF knows none of those keys and must not lose them.
     /// </summary>
-    public static TestPdf CreateWithColleagueMarkup()
+    public static TestPdf CreateWithColleagueMarkup(string contents = "Colleague's note")
     {
         var testPdf = new TestPdf();
         using var document = new PdfDocument();
@@ -61,7 +61,7 @@ sealed class TestPdf : IDisposable
 
         var note = Annotation(document, "/FreeText", "colleague-note");
         note.Elements["/Rect"] = Box(50, 300, 200, 330);
-        note.Elements["/Contents"] = new PdfString("Colleague's note");
+        note.Elements["/Contents"] = new PdfString(contents);
         note.Elements["/DA"] = new PdfString("/Helv 12 Tf 1 0 0 rg");
         note.Elements["/T"] = new PdfString("Colleague");
         note.Elements["/Subj"] = new PdfString("Text Box");

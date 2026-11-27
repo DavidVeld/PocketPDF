@@ -4,6 +4,21 @@ namespace PurpleStreamPDF.Core.Tests;
 public class ColleagueMarkupTests
 {
     [Fact]
+    public void Text_box_wrapped_by_another_viewer_reads_as_lines_that_fit_its_box()
+    {
+        const string contents = "Final column locations are subject to coordination with architects to avoid clash";
+        using var source = TestPdf.CreateWithColleagueMarkup(contents); // a 150 pt wide box, 12 pt Helvetica
+
+        var note = Assert.IsType<TextMarkup>(Assert.Single(MarkupFile.Load(source.FilePath).MarkupsByPage[0]));
+
+        var lines = TextLayout.Lines(note.Text);
+        Assert.True(lines.Length > 1);
+        Assert.All(lines, line => Assert.True(TextLayout.LineWidth(line, 12) <= 151, line));
+        Assert.Equal(contents, string.Join(' ', lines));
+        Assert.True(note.IsUnchangedFromFile); // only read differently: saving leaves the colleague's note as it was
+    }
+
+    [Fact]
     public void Untouched_markup_keeps_everything_when_something_else_is_added()
     {
         using var source = TestPdf.CreateWithColleagueMarkup();

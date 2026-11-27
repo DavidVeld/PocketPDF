@@ -121,17 +121,27 @@ static partial class AnnotationReader
 
         if (annotation.Elements.GetName("/IT") == "/FreeTextCallout" && annotation.Elements.GetObject("/CL") is PdfArray calloutLine)
         {
+            bool hasBorder = !annotation.Elements.ContainsKey(AnnotationWriter.NoBorderKey);
+            double lineWidth = LineWidthOf(annotation);
             return new CalloutMarkup
             {
                 ArrowTip = new PdfPoint(calloutLine.Elements.GetReal(0), calloutLine.Elements.GetReal(1)),
                 TextPosition = page.ToPdf(textBox.TopLeft),
-                Text = text, FontSize = fontSize, Color = color, LineWidth = LineWidthOf(annotation),
-                HasBorder = !annotation.Elements.ContainsKey(AnnotationWriter.NoBorderKey),
+                Text = WrappedToBox(annotation, text, fontSize, textBox.Width - 2 * LabelGeometry.TextInset(hasBorder, lineWidth)),
+                FontSize = fontSize, Color = color, LineWidth = lineWidth, HasBorder = hasBorder,
                 Ending = annotation.Elements.GetName("/LE") is "" ? LineEnding.Arrow : EndingOf(annotation.Elements.GetName("/LE")), // as before: no /LE read as an arrow
             };
         }
-        return new TextMarkup { TextPosition = page.ToPdf(textBox.TopLeft), Text = text, FontSize = fontSize, Color = color };
+        return new TextMarkup { TextPosition = page.ToPdf(textBox.TopLeft), Text = WrappedToBox(annotation, text, fontSize, textBox.Width), FontSize = fontSize, Color = color };
     }
+
+    /// <summary>
+    /// Another viewer wraps text to its box, but here text breaks only at line breaks: the box's wrapping becomes line breaks,
+    /// so the note keeps its shape when edited, moved or restyled. Text PurpleStreamPDF wrote already fits its box (1 pt spare
+    /// for rounding); in a font of its own it is measured in that font, so it is left as it is.
+    /// </summary>
+    static string WrappedToBox(PdfDictionary annotation, string text, double fontSize, double width) =>
+        annotation.Elements.ContainsKey(AnnotationWriter.FontKey) ? text : TextLayout.Wrap(text, fontSize, width + 1);
 
     static Markup? ReadCloud(PdfDictionary annotation)
     {

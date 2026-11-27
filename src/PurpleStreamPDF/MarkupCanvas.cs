@@ -1870,7 +1870,18 @@ public sealed class MarkupCanvas : Canvas
     /// <summary>Adds a markup's shapes after the other markups, under the overlay.</summary>
     void AddShapes(Markup markup)
     {
-        if (markup == _editingMarkup) return; // the text box stands in for it
+        if (markup == _editingMarkup) // the text box stands in for it
+        {
+            // The page image still shows a file markup as the file draws it: covered, so the old text doesn't show through the new.
+            if (markup.IsUnchangedFromFile && markup.FileBounds is { } fileBounds && _page!.ToView(fileBounds) is var area)
+            {
+                var cover = new Rectangle { Width = area.Width, Height = area.Height, Fill = Brushes.White, IsHitTestVisible = false };
+                SetLeft(cover, area.Left);
+                SetTop(cover, area.Top);
+                Children.Insert(_overlayStart++, cover);
+            }
+            return;
+        }
         foreach (var element in CreateShapes(markup))
         {
             element.Tag = markup; // lets the Select tool find the markup that was clicked
