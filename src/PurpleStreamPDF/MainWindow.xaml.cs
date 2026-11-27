@@ -199,7 +199,15 @@ public partial class MainWindow : Window
             Background = Brushes.Transparent, BorderThickness = new Thickness(0), ToolTip = "Close (Ctrl+W)",
         };
         close.Click += (_, _) => CloseDocument(doc);
-        doc.Tab = new TabItem { Tag = doc, Header = new StackPanel { Orientation = Orientation.Horizontal, Children = { new TextBlock { VerticalAlignment = VerticalAlignment.Center }, close } } };
+        var explore = new MenuItem { Header = "Explore Document Folder", Icon = new TextBlock { Style = (Style)FindResource("MenuIcon"), Text = "" } };
+        explore.Click += (_, _) => Process.Start("explorer.exe", $"/select,\"{doc.FilePath}\""); // the folder, with the file picked
+        var copyPath = new MenuItem { Header = "Copy Path", Icon = new TextBlock { Style = (Style)FindResource("MenuIcon"), Text = "" } };
+        copyPath.Click += (_, _) => Clipboard.SetText(doc.FilePath);
+        doc.Tab = new TabItem
+        {
+            Tag = doc, Header = new StackPanel { Orientation = Orientation.Horizontal, Children = { new TextBlock { VerticalAlignment = VerticalAlignment.Center }, close } },
+            ContextMenu = new ContextMenu { Items = { explore, copyPath } },
+        };
         TabStrip.Items.Add(doc.Tab);
         TabStrip.SelectedItem = doc.Tab; // OnTabSelected shows it
     }
@@ -364,6 +372,15 @@ public partial class MainWindow : Window
     {
         RecentList.ItemsSource = _settings.RecentFiles.ToList();
         RecentHeading.Visibility = _settings.RecentFiles.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        RecentMenu.Items.Clear();
+        foreach (var filePath in _settings.RecentFiles)
+        {
+            // A TextBlock header, so an underscore in the name shows instead of making an access key.
+            var item = new MenuItem { Header = new TextBlock { Text = Path.GetFileName(filePath) }, Tag = filePath, ToolTip = filePath };
+            item.Click += OnRecentFile;
+            RecentMenu.Items.Add(item);
+        }
+        RecentMenu.IsEnabled = RecentMenu.Items.Count > 0;
     }
 
     // ---- Window settings ----------------------------------------------------------------------

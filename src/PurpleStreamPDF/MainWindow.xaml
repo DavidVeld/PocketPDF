@@ -103,6 +103,9 @@
                 <MenuItem Header="_Open…" InputGestureText="Ctrl+O" Click="OnOpen">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8E5;" /></MenuItem.Icon>
                 </MenuItem>
+                <MenuItem x:Name="RecentMenu" Header="Open _Recent">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE81C;" /></MenuItem.Icon>
+                </MenuItem>
                 <MenuItem x:Name="SaveMenuItem" Header="_Save" InputGestureText="Ctrl+S" Click="OnSave" IsEnabled="False">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE74E;" /></MenuItem.Icon>
                 </MenuItem>
