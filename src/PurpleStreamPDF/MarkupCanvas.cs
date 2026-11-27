@@ -227,7 +227,15 @@ public sealed class MarkupCanvas : Canvas
             _tool = value;
             Select([]);
             ClearTextSelection();
-            Cursor = value == MarkupTool.SelectText ? Cursors.IBeam : value is MarkupTool.CadTrim or MarkupTool.CadOffset ? PickboxCursor : null;
+            Cursor = value switch
+            {
+                MarkupTool.SelectText => Cursors.IBeam,
+                MarkupTool.CadTrim or MarkupTool.CadOffset => PickboxCursor,
+                MarkupTool.Pen => PenCursor,
+                MarkupTool.Highlight => HighlightCursor,
+                MarkupTool.Measure => MeasureCursor,
+                _ => null,
+            };
             Redraw();
         }
     }
@@ -1526,13 +1534,54 @@ public sealed class MarkupCanvas : Canvas
                 byte shade = ring == Half ? (byte)0 : (byte)255; // black, edged in white outside so it shows on dark lines too
                 (pixels[at], pixels[at + 1], pixels[at + 2], pixels[at + 3]) = (shade, shade, shade, 255);
             }
+        return CursorFromPixels(pixels, Middle, Middle);
+    }
+
+    // Pen, highlight and measure: a crosshair with the tool's own tool bar icon beside it, so it's plain which tool is on.
+    static readonly Cursor PenCursor = CreateGlyphCursor("");
+    static readonly Cursor HighlightCursor = CreateGlyphCursor("");
+    static readonly Cursor MeasureCursor = CreateGlyphCursor("");
+
+    static Cursor CreateGlyphCursor(string glyph)
+    {
+        const int Size = 32, Hot = 7;
+        var visual = new DrawingVisual();
+        using (var drawing = visual.RenderOpen())
+        {
+            var halo = new Pen(Brushes.White, 3);
+            foreach (var pen in new[] { halo, new Pen(Brushes.Black, 1) }) // black, edged in white so it shows on dark lines too
+            {
+                drawing.DrawLine(pen, new Point(Hot + 0.5, 0), new Point(Hot + 0.5, 2 * Hot + 1));
+                drawing.DrawLine(pen, new Point(0, Hot + 0.5), new Point(2 * Hot + 1, Hot + 0.5));
+            }
+            var icon = new FormattedText(glyph, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                new Typeface("Segoe Fluent Icons, Segoe MDL2 Assets"), 15, Brushes.Black, 1).BuildGeometry(new Point());
+            var bounds = icon.Bounds;
+            drawing.PushTransform(new TranslateTransform(23 - bounds.X - bounds.Width / 2, 23 - bounds.Y - bounds.Height / 2)); // centred in the bottom-right quarter
+            drawing.DrawGeometry(Brushes.White, halo, icon);
+            drawing.DrawGeometry(Brushes.Black, null, icon);
+            drawing.Pop();
+        }
+        var bitmap = new RenderTargetBitmap(Size, Size, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        var rows = new byte[Size * Size * 4];
+        new FormatConvertedBitmap(bitmap, PixelFormats.Bgra32, null, 0).CopyPixels(rows, Size * 4, 0); // a .cur wants straight alpha
+        var pixels = new byte[rows.Length];
+        for (int y = 0; y < Size; y++) Array.Copy(rows, y * Size * 4, pixels, (Size - 1 - y) * Size * 4, Size * 4); // a .cur keeps the bottom row first
+        return CursorFromPixels(pixels, Hot, Hot);
+    }
+
+    /// <summary>A cursor from 32 x 32 BGRA pixels, bottom row first, with the hot spot at (x, y) from the top left.</summary>
+    static Cursor CursorFromPixels(byte[] pixels, int hotX, int hotY)
+    {
+        const int Size = 32;
         using var file = new System.IO.MemoryStream();
         using (var writer = new System.IO.BinaryWriter(file, System.Text.Encoding.ASCII, leaveOpen: true))
         {
             int andMask = Size * Size / 8;
             writer.Write((short)0); writer.Write((short)2); writer.Write((short)1); // a cursor file with one image
             writer.Write((byte)Size); writer.Write((byte)Size); writer.Write((short)0);
-            writer.Write((short)Middle); writer.Write((short)Middle); // the hot spot: the middle of the square
+            writer.Write((short)hotX); writer.Write((short)hotY);
             writer.Write(40 + pixels.Length + andMask); writer.Write(22);
             writer.Write(40); writer.Write(Size); writer.Write(Size * 2); writer.Write((short)1); writer.Write((short)32); // the bitmap header: height counts the mask too
             writer.Write(0); writer.Write(pixels.Length + andMask); writer.Write(0); writer.Write(0); writer.Write(0); writer.Write(0);
