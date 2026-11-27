@@ -27,7 +27,7 @@ are down the right, and pages, snap and its settings, zoom and the drawing scale
   square off the last point placed (perpendicular), and to the corners, edges, circle centres and quarter points of the
   markups and CAD lines drawn on it. The button next to Snap in the status bar picks which of these are on.
 - **Check text overlaps**: clouds every piece of text on the page that lines, arrows or fills run through.
-- **Check spelling**: clouds the words on the page that aren't in the dictionary, text in capitals included.
+- **Check spelling**: puts a red box round the words on the page that aren't in the dictionary, text in capitals included.
 - **Placed sheets**: put a page of another PDF, or an image, on the drawing, such as the architect's plan over the
   structure. Its white paper is see-through; set its opacity, draw it all in one colour, clip it to a rectangle, and
   line it up by clicking two grid crossings on it and the same two on the drawing. Ctrl+V pastes a copied image or
@@ -72,7 +72,7 @@ Press a tool's key to pick it.
 | Measure | M | Distances, lengths along several points, and areas, to the sheet's scale. They clear on Esc or another tool. |
 | Calibrate | | Click both ends of a known length and type its real length: sets the scale. |
 | Check text overlaps | | Clouds text that lines, arrows or fills run through. In the Tools menu only. |
-| Check spelling | | Clouds the words on the page that the Windows spell checker doesn't know, text in capitals included (it uses the dictionary of your Windows language). Words touching a number (150mm, S355) and short abbreviations (TBC, MEP) are skipped. In the Tools menu only. |
+| Check spelling | | Puts a red box round the words on the page that the Windows spell checker doesn't know, text in capitals included (it uses the dictionary of your Windows language). Words touching a number (150mm, S355) and short abbreviations (TBC, MEP) are skipped. In the Tools menu only. |
 | Place PDF or image | | Puts a PDF page or an image on the page (Tools menu, or Ctrl+V a copied image or PDF file). A bar above the drawing sets its opacity, colour, clip and alignment; drag its edge to move it, a corner to resize it. |
 
 **CAD tools** (experimental, on once the sheet has a scale). Type sizes in real millimetres in the status bar.

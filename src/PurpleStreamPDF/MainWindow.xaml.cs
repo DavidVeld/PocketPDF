@@ -1818,7 +1818,7 @@ public partial class MainWindow : Window
         NoticeStatus.Text = $"Clouded {overlaps.Count} text overlap{(overlaps.Count == 1 ? "" : "s")}: delete any you don't need, or undo them all";
     }
 
-    /// <summary>Clouds the words on this page that the Windows spell checker doesn't know.</summary>
+    /// <summary>Boxes the words on this page that the Windows spell checker doesn't know.</summary>
     async void OnCheckSpelling(object sender, RoutedEventArgs e)
     {
         if (_doc?.Pdf is not { } pdf || _doc.Loaded is not { } loaded || CurrentPageIndex < 0 || _doc.ComparePdf != null || IsViewOnly) return;
@@ -1859,18 +1859,22 @@ public partial class MainWindow : Window
         }
         var markups = loaded.MarkupsByPage[pageIndex];
         foreach (var (_, box) in misspelt)
-            markups.Add(new CloudMarkup
+        {
+            var edge = box.Inflate(1.5); // a tight red box round the word, clear of its letters
+            markups.Add(new RectangleMarkup
             {
-                Vertices = box.Inflate(OverlapFinder.Padding).Corners().Select(page.ToPdf).ToList(),
-                Color = MarkupLayer.CurrentColor,
-                LineWidth = MarkupLayer.CurrentLineWidth,
+                Corner1 = page.ToPdf(new ViewPoint(edge.Left, edge.Top)),
+                Corner2 = page.ToPdf(new ViewPoint(edge.Right, edge.Bottom)),
+                Color = "#E53935",
+                LineWidth = 1,
             });
+        }
         MarkupLayer.ShowPage(page, markups);
         LoadToolData(); // ShowPage drops the page text and line work
         _doc.History.Commit(pageIndex); // all clouds of one click are one undo step
         UpdateUndoState();
         var words = misspelt.Select(found => found.Word).Distinct().ToList();
-        NoticeStatus.Text = $"Clouded {misspelt.Count} word{(misspelt.Count == 1 ? "" : "s")} not in the dictionary: "
+        NoticeStatus.Text = $"Boxed {misspelt.Count} word{(misspelt.Count == 1 ? "" : "s")} not in the dictionary: "
             + string.Join(", ", words.Take(8)) + (words.Count > 8 ? "…" : "") + ". Delete any that are right, or undo them all";
     }
 

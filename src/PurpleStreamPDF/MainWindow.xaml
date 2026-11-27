@@ -220,7 +220,7 @@
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE9D5;" /></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Check spe_lling" Click="OnCheckSpelling" IsEnabled="{Binding IsEnabled, ElementName=OverlapsButton}"
-                          ToolTip="Clouds the words on this page the Windows spell checker doesn't know, capitals included">
+                          ToolTip="Puts a red box round the words on this page the Windows spell checker doesn't know, capitals included">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xF87B;" /></MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Place PDF or _image…" Click="OnPlaceSheet" IsEnabled="{Binding IsEnabled, ElementName=PlaceSheetButton}"
