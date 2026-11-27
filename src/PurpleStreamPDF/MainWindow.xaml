@@ -219,6 +219,10 @@
                           ToolTip="{Binding ToolTip, ElementName=OverlapsButton}">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE9D5;" /></MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="Check spe_lling" Click="OnCheckSpelling" IsEnabled="{Binding IsEnabled, ElementName=OverlapsButton}"
+                          ToolTip="Clouds the words on this page the Windows spell checker doesn't know, capitals included">
+                    <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xF87B;" /></MenuItem.Icon>
+                </MenuItem>
                 <MenuItem Header="Place PDF or _image…" Click="OnPlaceSheet" IsEnabled="{Binding IsEnabled, ElementName=PlaceSheetButton}"
                           ToolTip="{Binding ToolTip, ElementName=PlaceSheetButton}">
                     <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8B9;" /></MenuItem.Icon>
@@ -245,15 +249,33 @@
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_CAD tools" ToolTip="Experimental. On once the sheet has a scale (Tools ▸ Calibrate, or the scale in the status bar)">
-                <MenuItem Header="_Line" Tag="CadLineTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadLineTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadLineTool}" />
-                <MenuItem Header="_Polyline" Tag="CadPolylineTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadPolylineTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadPolylineTool}" />
-                <MenuItem Header="_Rectangle" Tag="CadRectangleTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadRectangleTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadRectangleTool}" />
-                <MenuItem Header="_Circle" Tag="CadCircleTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadCircleTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadCircleTool}" />
-                <MenuItem Header="_Offset" Tag="CadOffsetTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadOffsetTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadOffsetTool}" />
-                <MenuItem Header="_Trim" Tag="CadTrimTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadTrimTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadTrimTool}" />
-                <MenuItem Header="_Hatch" Tag="CadHatchTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadHatchTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadHatchTool}" />
-                <MenuItem Header="_Dimension" Tag="CadDimensionTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadDimensionTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadDimensionTool}" />
-                <MenuItem Header="_Join lines into polyline" Click="OnCadJoin" IsEnabled="{Binding IsEnabled, ElementName=CadJoinButton}" />
+                <MenuItem Header="_Line" Tag="CadLineTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadLineTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadLineTool}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadLine}" /><Path Style="{StaticResource IconFill}" Data="{StaticResource IconCadLineEnds}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Polyline" Tag="CadPolylineTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadPolylineTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadPolylineTool}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadPolyline}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Rectangle" Tag="CadRectangleTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadRectangleTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadRectangleTool}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadRectangle}" /><Path Style="{StaticResource IconFill}" Data="{StaticResource IconCadRectangleCorners}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Circle" Tag="CadCircleTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadCircleTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadCircleTool}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadCircle}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Offset" Tag="CadOffsetTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadOffsetTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadOffsetTool}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadOffset}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Trim" Tag="CadTrimTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadTrimTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadTrimTool}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadTrim}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Hatch" Tag="CadHatchTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadHatchTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadHatchTool}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadHatch}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Dimension" Tag="CadDimensionTool" Click="OnToolMenu" IsChecked="{Binding IsChecked, ElementName=CadDimensionTool, Mode=OneWay}" IsEnabled="{Binding IsEnabled, ElementName=CadDimensionTool}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadDimension}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Join lines into polyline" Click="OnCadJoin" IsEnabled="{Binding IsEnabled, ElementName=CadJoinButton}">
+                    <MenuItem.Icon><Viewbox Width="16" Height="16"><Grid Style="{StaticResource DrawnIcon}"><Path Style="{StaticResource IconLine}" Data="{StaticResource IconCadJoin}" /><Path Style="{StaticResource IconFill}" Data="{StaticResource IconCadJoinCorners}" /></Grid></Viewbox></MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_Help" SubmenuOpened="OnHelpMenuOpened">
                 <MenuItem Header="Show me the _tricks" InputGestureText="F1" Click="OnShowTricks" ToolTip="A quick tour of the window">

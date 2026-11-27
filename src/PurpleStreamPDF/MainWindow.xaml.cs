@@ -1818,6 +1818,62 @@ public partial class MainWindow : Window
         NoticeStatus.Text = $"Clouded {overlaps.Count} text overlap{(overlaps.Count == 1 ? "" : "s")}: delete any you don't need, or undo them all";
     }
 
+    /// <summary>Clouds the words on this page that the Windows spell checker doesn't know.</summary>
+    async void OnCheckSpelling(object sender, RoutedEventArgs e)
+    {
+        if (_doc?.Pdf is not { } pdf || _doc.Loaded is not { } loaded || CurrentPageIndex < 0 || _doc.ComparePdf != null || IsViewOnly) return;
+        MarkupLayer.FinishTextEditing();
+        int pageIndex = CurrentPageIndex;
+        var page = loaded.Pages[pageIndex];
+        List<(string Word, ViewRect Box)> misspelt;
+        Mouse.OverrideCursor = Cursors.Wait;
+        try
+        {
+            var text = await Task.Run(() => pdf.GetText(pageIndex));
+            if (text.IsEmpty)
+            {
+                MessageBox.Show(this, $"Page {pageIndex + 1} has no text PurpleStreamPDF can read (it may be drawn as lines), so its spelling can't be checked.", "PurpleStreamPDF");
+                return;
+            }
+            if (WindowsSpellChecker.Create() is not { } checker)
+            {
+                MessageBox.Show(this, "Windows has no spell checker for your language. Add one under Settings ▸ Time & language ▸ Language & region.", "PurpleStreamPDF");
+                return;
+            }
+            misspelt = SpellingFinder.FindMisspelt(text, checker.IsSpeltRight); // on this thread: the checker is a COM object made here
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Could not check the spelling.\n\n{ex.Message}", "PurpleStreamPDF");
+            return;
+        }
+        finally
+        {
+            Mouse.OverrideCursor = null;
+        }
+        if (!ReferenceEquals(loaded, _doc?.Loaded) || pageIndex != CurrentPageIndex) return; // the user moved on meanwhile
+        if (misspelt.Count == 0)
+        {
+            MessageBox.Show(this, $"No spelling mistakes found on page {pageIndex + 1}.", "PurpleStreamPDF");
+            return;
+        }
+        var markups = loaded.MarkupsByPage[pageIndex];
+        foreach (var (_, box) in misspelt)
+            markups.Add(new CloudMarkup
+            {
+                Vertices = box.Inflate(OverlapFinder.Padding).Corners().Select(page.ToPdf).ToList(),
+                Color = MarkupLayer.CurrentColor,
+                LineWidth = MarkupLayer.CurrentLineWidth,
+            });
+        MarkupLayer.ShowPage(page, markups);
+        LoadToolData(); // ShowPage drops the page text and line work
+        _doc.History.Commit(pageIndex); // all clouds of one click are one undo step
+        UpdateUndoState();
+        var words = misspelt.Select(found => found.Word).Distinct().ToList();
+        NoticeStatus.Text = $"Clouded {misspelt.Count} word{(misspelt.Count == 1 ? "" : "s")} not in the dictionary: "
+            + string.Join(", ", words.Take(8)) + (words.Count > 8 ? "…" : "") + ". Delete any that are right, or undo them all";
+    }
+
     async void OnExportOverlay(object sender, RoutedEventArgs e)
     {
         if (_doc?.ComparePdf is not { } comparePdf || _doc.Pdf is not { } pdf || _doc.Loaded is not { } loaded || CurrentPageIndex < 0) return;
