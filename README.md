@@ -39,6 +39,8 @@ are down the right, and pages, snap and its settings, zoom and the drawing scale
   PDFs opened together from Explorer, or while PurpleStreamPDF is open, all go into tabs of the one window.
 - **Pages**: the page list, and first / previous / next / last buttons in the status bar, where you can also
   type a page number. Rotate a page clockwise, counter-clockwise or 180° with its markups; saving keeps it turned.
+  Right-click the page list to insert a blank sheet, delete pages, export them as a new PDF, or move them up, down,
+  to the top or to the end. Ctrl- or Shift-click picks several pages; their markups go with them.
 - **New sheet**: a blank page in A4 to A0 or a custom size, portrait or landscape.
 - **Combine PDFs**: select PDFs in Explorer, right-click, *Combine PDFs* (add it to the Explorer menu from the
   Help menu).

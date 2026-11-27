@@ -777,9 +777,32 @@
 
         <Border x:Name="PagePanel" DockPanel.Dock="Left" Width="150"
                 BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
-            <ListBox x:Name="PageList" SelectionChanged="OnPageSelected" BorderThickness="0" Background="Transparent"
+            <!-- Ctrl- or Shift-click picks several pages, for the right-click menu; the first picked is the one in view. -->
+            <ListBox x:Name="PageList" SelectionChanged="OnPageSelected" BorderThickness="0" Background="Transparent" SelectionMode="Extended"
                      VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Standard"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" ContextMenuOpening="OnPageMenuOpening">
+                <ListBox.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem x:Name="InsertPageItem" Header="_Insert New Sheet…" Click="OnInsertPage" ToolTip="A blank sheet after the picked pages: A4 to A0 or your own size">
+                            <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE7C3;" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem x:Name="DeletePagesItem" Header="_Delete" Click="OnDeletePages">
+                            <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE74D;" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem x:Name="ExportPagesItem" Header="_Export As…" Click="OnExportPages" ToolTip="A new PDF of the picked pages, with their markups">
+                            <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE792;" /></MenuItem.Icon>
+                        </MenuItem>
+                        <Separator />
+                        <MenuItem x:Name="MovePagesUpItem" Header="Move _Up" Click="OnMovePagesUp">
+                            <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE74A;" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem x:Name="MovePagesDownItem" Header="Move Do_wn" Click="OnMovePagesDown">
+                            <MenuItem.Icon><TextBlock Style="{StaticResource MenuIcon}" Text="&#xE74B;" /></MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem x:Name="MovePagesToTopItem" Header="Move to _Top" Click="OnMovePagesToTop" />
+                        <MenuItem x:Name="MovePagesToEndItem" Header="Move to _End" Click="OnMovePagesToEnd" />
+                    </ContextMenu>
+                </ListBox.ContextMenu>
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="local:PageThumbnail">
                         <StackPanel Margin="0,4" HorizontalAlignment="Center">

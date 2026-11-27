@@ -141,7 +141,46 @@ public static class MarkupFile
     /// </summary>
     public static void Save(LoadedPdf loaded, IReadOnlyDictionary<int, List<Markup>> markupsByPage, string targetPath)
     {
-        using var document = OpenForEditing(loaded.OriginalBytes);
+        using var document = WithMarkups(loaded, markupsByPage);
+
+        // Write next to the target and swap at the end, so a failed save never damages an existing file.
+        string temporaryPath = targetPath + ".saving";
+        try
+        {
+            document.Save(temporaryPath);
+            File.Move(temporaryPath, targetPath, overwrite: true);
+        }
+        catch
+        {
+            File.Delete(temporaryPath);
+            throw;
+        }
+    }
+
+    /// <summary>The file as <see cref="Save"/> writes it, its markups, turns and scales in it, held in memory (to change its pages, say).</summary>
+    public static byte[] SaveToBytes(LoadedPdf loaded)
+    {
+        using var document = WithMarkups(loaded, loaded.MarkupsByPage);
+        return SaveToBytes(document);
+    }
+
+    static PdfDocument WithMarkups(LoadedPdf loaded, IReadOnlyDictionary<int, List<Markup>> markupsByPage)
+    {
+        var document = OpenForEditing(loaded.OriginalBytes);
+        try
+        {
+            WriteMarkups(document, loaded, markupsByPage);
+            return document;
+        }
+        catch
+        {
+            document.Dispose();
+            throw;
+        }
+    }
+
+    static void WriteMarkups(PdfDocument document, LoadedPdf loaded, IReadOnlyDictionary<int, List<Markup>> markupsByPage)
+    {
         for (int pageIndex = 0; pageIndex < document.PageCount; pageIndex++)
         {
             var page = document.Pages[pageIndex];
@@ -191,19 +230,6 @@ public static class MarkupFile
                 page.Elements["/VP"] = new PdfArray(document, viewport);
             }
             WriteRotation(page, geometry);
-        }
-
-        // Write next to the target and swap at the end, so a failed save never damages an existing file.
-        string temporaryPath = targetPath + ".saving";
-        try
-        {
-            document.Save(temporaryPath);
-            File.Move(temporaryPath, targetPath, overwrite: true);
-        }
-        catch
-        {
-            File.Delete(temporaryPath);
-            throw;
         }
     }
 

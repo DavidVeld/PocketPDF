@@ -36,6 +36,9 @@ public sealed class DocumentTab(LoadedPdf loaded, PdfRenderer pdf, string filePa
     /// <summary>A page turned since opening or saving: not a markup either.</summary>
     public bool PageTurned { get; set; }
 
+    /// <summary>Pages put in, deleted or moved since opening or saving: <see cref="Loaded"/> is then a changed copy of the file.</summary>
+    public bool PagesChanged { get; set; }
+
     public UndoHistory History { get; } = StartHistory(loaded);
 
     /// <summary>File annotations the pages are currently drawn without.</summary>
@@ -43,7 +46,7 @@ public sealed class DocumentTab(LoadedPdf loaded, PdfRenderer pdf, string filePa
 
     public bool IsViewOnly => Loaded.ViewOnlyReason != null;
 
-    public bool HasUnsavedWork => !History.IsAtSavePoint || ScaleChanged || PageTurned || IsOnlyInMemory;
+    public bool HasUnsavedWork => !History.IsAtSavePoint || ScaleChanged || PageTurned || PagesChanged || IsOnlyInMemory;
 
     /// <summary>The file's name, marked * while there is unsaved work, for the tab and the window title.</summary>
     public string Title => $"{(HasUnsavedWork ? "* " : "")}{Path.GetFileName(FilePath)}";

@@ -200,9 +200,11 @@ public partial class MainWindow : Window
         };
         close.Click += (_, _) => CloseDocument(doc);
         var explore = new MenuItem { Header = "Explore Document Folder", Icon = new TextBlock { Style = (Style)FindResource("MenuIcon"), Text = "" } };
-        explore.Click += (_, _) => Process.Start("explorer.exe", $"/select,\"{doc.FilePath}\""); // the folder, with the file picked
+        // The tab's document, read when clicked: an overlay or a page change puts another document in the tab, and Save As moves it.
+        string FilePath() => ((DocumentTab)doc.Tab.Tag).FilePath;
+        explore.Click += (_, _) => Process.Start("explorer.exe", $"/select,\"{FilePath()}\""); // the folder, with the file picked
         var copyPath = new MenuItem { Header = "Copy Path", Icon = new TextBlock { Style = (Style)FindResource("MenuIcon"), Text = "" } };
-        copyPath.Click += (_, _) => Clipboard.SetText(doc.FilePath);
+        copyPath.Click += (_, _) => Clipboard.SetText(FilePath());
         doc.Tab = new TabItem
         {
             Tag = doc, Header = new StackPanel { Orientation = Orientation.Horizontal, Children = { new TextBlock { VerticalAlignment = VerticalAlignment.Center }, close } },
@@ -292,6 +294,15 @@ public partial class MainWindow : Window
     /// <summary>Asks for a sheet size and opens a blank one-page document; it's only in memory until saved.</summary>
     void ShowNewDialog()
     {
+        if (AskForSheetSize("New sheet", "A blank sheet to draw on:") is not { } size) return;
+        var bytes = BlankPdf.Create(size.WidthMm, size.HeightMm);
+        string folder = _settings.LastFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        AddDocument(new DocumentTab(MarkupFile.Load(bytes), new PdfRenderer(bytes), Path.Combine(folder, $"New {size.Name}.pdf"), isOnlyInMemory: true));
+    }
+
+    /// <summary>A sheet size from A4 to A0 or typed, portrait or landscape; null if cancelled. The name is the preset's, or "sheet".</summary>
+    (double WidthMm, double HeightMm, string Name)? AskForSheetSize(string title, string prompt)
+    {
         var custom = new PaperSize("Custom", 420, 297);
         var sizes = new ComboBox { ItemsSource = PaperSize.Presets.Append(custom).ToList(), SelectedIndex = 1, Width = 110 };
         var width = new TextBox { Width = 70, Margin = new Thickness(12, 0, 0, 0), HorizontalContentAlignment = HorizontalAlignment.Right };
@@ -319,14 +330,14 @@ public partial class MainWindow : Window
         TextBlock Label(string text) => new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 8, 0) };
         var dialog = new Window
         {
-            Title = "New sheet", Owner = this, SizeToContent = SizeToContent.WidthAndHeight, ResizeMode = ResizeMode.NoResize,
+            Title = title, Owner = this, SizeToContent = SizeToContent.WidthAndHeight, ResizeMode = ResizeMode.NoResize,
             WindowStartupLocation = WindowStartupLocation.CenterOwner, ShowInTaskbar = false,
             Content = new StackPanel
             {
                 Margin = new Thickness(16),
                 Children =
                 {
-                    new TextBlock { Text = "A blank sheet to draw on:", Margin = new Thickness(0, 0, 0, 8) },
+                    new TextBlock { Text = prompt, Margin = new Thickness(0, 0, 0, 8) },
                     new StackPanel { Orientation = Orientation.Horizontal, Children = { sizes, width, Label("×"), height, Label("mm") } },
                     new StackPanel { Orientation = Orientation.Horizontal, Children = { portrait, landscape } },
                     new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 16, 0, 0), Children = { ok, cancel } },
@@ -336,13 +347,10 @@ public partial class MainWindow : Window
         ok.Click += (_, _) =>
         {
             if (TryReadSize(out double w, out double h) && BlankPdf.IsValidSide(w) && BlankPdf.IsValidSide(h)) dialog.DialogResult = true;
-            else MessageBox.Show(dialog, $"Type the width and height in mm, each from {PaperSize.MinSideMm} to {PaperSize.MaxSideMm}.", "New sheet");
+            else MessageBox.Show(dialog, $"Type the width and height in mm, each from {PaperSize.MinSideMm} to {PaperSize.MaxSideMm}.", title);
         };
-        if (dialog.ShowDialog() != true || !TryReadSize(out double widthMm, out double heightMm)) return;
-        var bytes = BlankPdf.Create(widthMm, heightMm);
-        string name = IsCustom() ? "sheet" : ((PaperSize)sizes.SelectedItem).Name;
-        string folder = _settings.LastFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        AddDocument(new DocumentTab(MarkupFile.Load(bytes), new PdfRenderer(bytes), Path.Combine(folder, $"New {name}.pdf"), isOnlyInMemory: true));
+        if (dialog.ShowDialog() != true || !TryReadSize(out double widthMm, out double heightMm)) return null;
+        return (widthMm, heightMm, IsCustom() ? "sheet" : ((PaperSize)sizes.SelectedItem).Name);
     }
 
     void ShowOpenDialog()
@@ -585,6 +593,7 @@ public partial class MainWindow : Window
         _doc.IsOnlyInMemory = false;
         _doc.ScaleChanged = false;
         _doc.PageTurned = false;
+        _doc.PagesChanged = false;
         UpdateUndoState();
         return true;
     }
